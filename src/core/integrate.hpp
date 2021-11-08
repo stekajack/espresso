@@ -102,14 +102,15 @@ int integrate(int n_steps, int reuse_forces);
  *  @retval ES_OK on success
  *  @retval ES_ERROR on error
  */
-int python_integrate(int n_steps, bool recalc_forces, bool reuse_forces);
+int python_integrate(int n_steps, bool recalc_forces, bool reuse_forces,
+                     bool spara_lb);
 
 /** Start integrator.
  *  @param n_steps       how many steps to do.
  *  @param reuse_forces  whether to trust the old forces for the first half step
  *  @return nonzero on error
  */
-int mpi_integrate(int n_steps, int reuse_forces);
+int mpi_integrate(int n_steps, int reuse_forces, bool spara_lb);
 
 /** Steepest descent main integration loop
  *
@@ -120,7 +121,7 @@ int mpi_integrate(int n_steps, int reuse_forces);
  *  @param steps Maximal number of integration steps
  *  @return number of integrated steps
  */
-int mpi_steepest_descent(int steps);
+int mpi_steepest_descent(int steps, bool spara_lb);
 
 /** @brief Set the steepest descent integrator for energy minimization. */
 void integrate_set_steepest_descent(double f_max, double gamma,

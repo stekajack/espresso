@@ -200,7 +200,7 @@ cdef class Integrator:
         raise Exception(
             "Subclasses of Integrator must define the required_keys() method.")
 
-    def run(self, steps=1, recalc_forces=False, reuse_forces=False):
+    def run(self, steps=1, recalc_forces=False, reuse_forces=False, spara_lb=False):
         """
         Run the integrator.
 
@@ -221,7 +221,7 @@ cdef class Integrator:
         check_type_or_throw_except(
             reuse_forces, 1, bool, "reuse_forces has to be a bool")
 
-        _integrate(steps, recalc_forces, reuse_forces)
+        _integrate(steps, recalc_forces, reuse_forces, spara_lb)
 
         if integrate.set_py_interrupt:
             PyErr_SetInterrupt()
@@ -302,7 +302,7 @@ cdef class SteepestDescent(Integrator):
         check_type_or_throw_except(steps, 1, int, "steps must be an int")
         assert steps >= 0, "steps has to be positive"
 
-        integrated = mpi_steepest_descent(steps)
+        integrated = mpi_steepest_descent(steps, False)
 
         handle_errors("Encountered errors during integrate")
 

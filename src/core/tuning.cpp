@@ -43,14 +43,14 @@
 double time_force_calc(int int_steps) {
   Utils::Statistics::RunningAverage<double> running_average;
 
-  if (mpi_integrate(0, 0))
+  if (mpi_integrate(0, 0, false))
     return -1;
 
   /* perform force calculation test */
   for (int i = 0; i < int_steps; i++) {
     const double tick = MPI_Wtime();
 
-    if (mpi_integrate(0, -1))
+    if (mpi_integrate(0, -1, false))
       return -1;
 
     const double tock = MPI_Wtime();
@@ -79,12 +79,12 @@ double time_force_calc(int int_steps) {
  * @return Time per integration in ms.
  */
 static double time_calc(int int_steps) {
-  if (mpi_integrate(0, 0))
+  if (mpi_integrate(0, 0, false))
     return -1;
 
   /* perform force calculation test */
   const double tick = MPI_Wtime();
-  if (mpi_integrate(int_steps, -1))
+  if (mpi_integrate(int_steps, -1, false))
     return -1;
   const double tock = MPI_Wtime();
 

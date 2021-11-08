@@ -288,7 +288,7 @@ BOOST_FIXTURE_TEST_CASE(espresso_system_stand_alone, ParticleFactory,
     reset_particle_positions();
 
     // recalculate forces without propagating the system
-    mpi_integrate(0, 0);
+    mpi_integrate(0, 0, false);
 
     // particles are arranged in a right triangle
     auto const &p1 = get_particle_data(pid1);
@@ -323,7 +323,7 @@ BOOST_FIXTURE_TEST_CASE(espresso_system_stand_alone, ParticleFactory,
         p.r.p += time_step * p.m.v;
         expected[pid] = p.r.p;
       }
-      mpi_integrate(1, 0);
+      mpi_integrate(1, 0, false);
       for (auto pid : pids) {
         auto const &p = get_particle_data(pid);
         BOOST_CHECK_LE((p.r.p - expected[pid]).norm(), tol);

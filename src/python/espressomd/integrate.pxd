@@ -36,8 +36,8 @@ cdef extern from "integrate.hpp":
     void mpi_set_time(double time)
 
 cdef extern from "integrate.hpp" nogil:
-    cdef int python_integrate(int n_steps, cbool recalc_forces, int reuse_forces)
-    cdef int mpi_steepest_descent(int max_steps)
+    cdef int python_integrate(int n_steps, cbool recalc_forces, int reuse_forces, cbool spara_lb)
+    cdef int mpi_steepest_descent(int max_steps, cbool spara_lb)
     cdef void integrate_set_sd() except +
     cdef void integrate_set_nvt()
     cdef void integrate_set_steepest_descent(const double f_max, const double gamma,
@@ -64,6 +64,6 @@ IF STOKESIAN_DYNAMICS:
         LUBRICATION = 1 << 2,
         FTS = 1 << 3
 
-cdef inline int _integrate(int nSteps, cbool recalc_forces, int reuse_forces):
+cdef inline int _integrate(int nSteps, cbool recalc_forces, int reuse_forces, cbool spara_lb):
     with nogil:
-        return python_integrate(nSteps, recalc_forces, reuse_forces)
+        return python_integrate(nSteps, recalc_forces, reuse_forces, spara_lb)
