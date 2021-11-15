@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.15)
 message(STATUS "CMake version: ${CMAKE_VERSION}")
 if(POLICY CMP0076)
   # make target_sources() convert relative paths to absolute
@@ -167,7 +167,7 @@ endif(WITH_CUDA)
 find_package(PythonInterp 3.7 REQUIRED)
 
 if(WITH_PYTHON)
-  find_package(Cython 0.29.14 REQUIRED)
+  find_package(Cython 0.29.13 REQUIRED)
   find_package(PythonHeaders REQUIRED)
   find_package(NumPy REQUIRED)
   find_program(IPYTHON_EXECUTABLE NAMES jupyter ipython3 ipython)
