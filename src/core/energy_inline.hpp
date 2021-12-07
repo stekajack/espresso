@@ -201,6 +201,39 @@ inline void add_non_bonded_pair_energy(Particle const &p1, Particle const &p2,
 #endif
 }
 
+/** Explicitly compute non-bonded and short-range coulomb interactions between a particle pair
+ *  @param p1        particle 1.
+ *  @param p2        particle 2.
+ *  @param d         vector between p1 and p2.
+ *  @param dist      distance between p1 and p2.
+ *  @param dist2     distance squared between p1 and p2.
+ *  @return Resulting energy from both non-bonded and short-range Coulomb energy terms
+ */
+inline double compute_non_bonded_pair_energy(Particle const &p1, Particle const &p2,
+                                       Utils::Vector3d const &d,
+                                       double const dist, double const dist2) {
+  IA_parameters const &ia_params = *get_ia_param(p1.p.type, p2.p.type);
+
+  double result = 0.0;
+
+#ifdef EXCLUSIONS
+  if (do_nonbonded(p1, p2))
+#endif
+    result += calc_non_bonded_pair_energy(p1, p2, ia_params, d, dist);
+
+#ifdef ELECTROSTATICS
+    result += Coulomb::pair_energy(p1, p2, p1.p.q * p2.p.q, d, dist, dist2);
+#endif
+
+#ifdef DIPOLES
+    result += Dipole::pair_energy(p1, p2, d, dist, dist2);
+#endif
+
+    return result;
+}
+
+
+
 inline boost::optional<double>
 calc_bonded_energy(Bonded_IA_Parameters const &iaparams, Particle const &p1,
                    Utils::Span<Particle *> partners) {

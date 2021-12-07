@@ -33,6 +33,7 @@
 #include "grid.hpp"
 #include "integrate.hpp"
 #include "particle_data.hpp"
+#include "energy_inline.hpp"
 
 #include "DomainDecomposition.hpp"
 #include "ParticleDecomposition.hpp"
@@ -82,6 +83,31 @@ std::vector<std::pair<int, int>> get_pairs_filtered(double const distance,
   }
 
   return ret;
+}
+
+std::vector<int> get_short_range_neighbors(const Particle& p, const double& distance) {
+    std::vector<int> ret;
+    auto const cutoff2 = distance * distance;
+    auto kernel = [&ret, &p, &cutoff2, df = detail::MinimalImageDistance{}](const Particle &p1) {
+	if (df(p1, p).dist2 < cutoff2) {
+	    ret.emplace_back(p1.p.identity);
+	};
+    };
+    cell_structure.run_on_particle_short_range_neighbors(p, kernel);
+    return ret;
+}
+
+double particle_short_range_energy_contribution(const Particle& p) {
+    double ret = 0.0;
+    auto kernel = [&ret, &p, df = detail::MinimalImageDistance{}](const Particle &p1) {
+	const Utils::Vector3d vec = df(p,p1).vec21;
+	const auto dist2 = df(p,p1).dist2;
+	const auto dist = sqrt(dist2);
+	// Add energy for current particle pair to result
+	ret += compute_non_bonded_pair_energy(p, p1, vec, dist, dist2);
+
+    };
+    return ret;
 }
 
 namespace boost {

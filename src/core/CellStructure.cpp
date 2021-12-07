@@ -134,6 +134,31 @@ Particle *CellStructure::add_particle(Particle &&p) {
       append_indexed_particle(cell->particles(), std::move(p)));
 }
 
+template<class Kernel> bool CellStructure::run_on_particle_short_range_neighbors(Particle const &p, Kernel kernel) {
+    auto const cell = particle_to_cell(p);
+    if (cell == nullptr) {
+	return false;
+    }
+    // Iterate over particles inside cell
+    for (auto const &part : cell->particles()) {
+	if (part == p) {
+	    continue;
+	}
+	kernel(part);
+    }
+    // Iterate over all neighbors
+    for (auto &neighbor : cell->neighbors().all()) {
+	// Iterate over particles in neighbors
+	for (auto const &part : neighbor->particles()) {
+	    // TODO: WIP, remove later
+	    assert(part != p);
+
+	    kernel(part);
+	}
+    }
+    return true;
+}
+
 int CellStructure::get_max_local_particle_id() const {
   auto it = std::find_if(m_particle_index.rbegin(), m_particle_index.rend(),
                          [](const Particle *p) { return p != nullptr; });

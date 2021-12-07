@@ -633,6 +633,17 @@ public:
 
     return particle_to_cell(p);
   }
-};
 
+public:
+  /**
+   * @brief Run kernel on all particles inside cell and neighbors.
+   *
+   * @param p Particle to identify cell and neighbors
+   * @param kernel Function to apply to all particles inside cell and neighbors
+   * @return false if cell is not found via particle_to_cell, otherwise true
+   */
+  template<class Kernel>
+  bool run_on_particle_short_range_neighbors(Particle const &p, Kernel kernel);
+
+};
 #endif // ESPRESSO_CELLSTRUCTURE_HPP
