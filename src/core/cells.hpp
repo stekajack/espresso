@@ -89,6 +89,14 @@ void cells_update_ghosts(unsigned data_parts);
 std::vector<std::pair<int, int>> mpi_get_pairs(double distance);
 
 /**
+ * @brief Get ids of clos-erange neighbours of a particle P, that is, particles
+ * within the cell of particle P and its neighbouring cells than @p distance
+ *
+ */
+std::vector<int> mpi_get_short_range_neighbors(const Particle &p,
+                                               const double distance);
+
+/**
  * @brief Get pairs closer than @p distance if both their types are in @p types
  *
  * Pairs are sorted so that first.id < second.id
@@ -111,25 +119,16 @@ void check_resort_particles();
 std::vector<int> mpi_resort_particles(int global_flag);
 
 /**
- * @brief Get short range neighbors of particle p
- *
- * This function iterates over all particles in the cell of p and its neighboring cells and adds particles close than the specified distance to the return list.
- * 
- * @param p Particle to find short range neighbors for
- * @param distance Short range cutoff distance
- * @return Vector containing the particle ids of the neighbors
- */
-std::vector<int> get_short_range_neighbors(const Particle& p, const double& distance);
-
-/**
  * @brief Compute short range energy of particle p
  *
- * Iterates through particles inside cell and neighboring cells and computes energy contribution for particle p
+ * Iterates through particles inside cell and neighboring cells and computes
+ * energy contribution for particle p
  *
  * @param p Particle to calculate energy for
- * @return Double containing short-range Coulomb and non-bonded energy of the particle
+ * @return Double containing short-range Coulomb and non-bonded energy of the
+ * particle
  */
-double particle_short_range_energy_contribution(const Particle& p);
+double particle_short_range_energy_contribution(const Particle &p);
 
 /**
  * @brief Find the cell in which a particle is stored.

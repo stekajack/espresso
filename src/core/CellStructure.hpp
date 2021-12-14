@@ -642,8 +642,30 @@ public:
    * @param kernel Function to apply to all particles inside cell and neighbors
    * @return false if cell is not found via particle_to_cell, otherwise true
    */
-  template<class Kernel>
-  bool run_on_particle_short_range_neighbors(Particle const &p, Kernel kernel);
+  template <class Kernel>
+  bool run_on_particle_short_range_neighbors(const Particle &p, Kernel kernel) {
+    auto const cell = particle_to_cell(p);
+    if (cell == nullptr) {
+      return false;
+    }
+    // Iterate over particles inside cell
+    for (auto const &part : cell->particles()) {
+      if (part == p) {
+        continue;
+      }
+      kernel(part);
+    }
+    // Iterate over all neighbors
+    for (auto &neighbor : cell->neighbors().all()) {
+      // Iterate over particles in neighbors
+      for (auto const &part : neighbor->particles()) {
+        // TODO: WIP, remove later
+        assert(part != p);
 
+        kernel(part);
+      }
+    }
+    return true;
+  }
 };
 #endif // ESPRESSO_CELLSTRUCTURE_HPP

@@ -28,6 +28,7 @@ from .cellsystem cimport mpi_set_skin, skin
 from .utils import handle_errors
 from .utils cimport Vector3i
 from .utils cimport check_type_or_throw_except, make_array_locked
+from .particle_data cimport ParticleHandle
 
 cdef class CellSystem:
     def set_domain_decomposition(self, use_verlet_lists=True):
@@ -128,6 +129,12 @@ cdef class CellSystem:
             pairs = self._get_pairs_of_types(distance, types)
         handle_errors("")
         return pairs
+    
+    def get_short_range_neighbors(self, ParticleHandle particle, distance):
+        cdef vector[int] list_of_neighbours
+        pass_part = get_particle_data(particle.id)
+        list_of_neighbours = mpi_get_short_range_neighbors(pass_part, distance)
+        return list_of_neighbours
 
     def _get_pairs_of_types(self, distance, types):
         """

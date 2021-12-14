@@ -35,6 +35,10 @@ cdef extern from "cells.hpp":
 cdef extern from "communication.hpp":
     int n_nodes
 
+cdef extern from "particle_data.hpp":
+    ctypedef struct particle "Particle"
+    const particle & get_particle_data(int pid) except +
+
 cdef extern from "cells.hpp":
     int CELL_STRUCTURE_DOMDEC
     int CELL_STRUCTURE_NSQUARE
@@ -48,6 +52,7 @@ cdef extern from "cells.hpp":
     const DomainDecomposition * get_domain_decomposition()
 
     vector[pair[int, int]] mpi_get_pairs(double distance) except +
+    vector[int] mpi_get_short_range_neighbors(const particle &p, const double distance) except +
     vector[pair[int, int]] mpi_get_pairs_of_types(double distance, vector[int] types) except +
     vector[PairInfo] mpi_non_bonded_loop_trace() 
     vector[int] mpi_resort_particles(int global_flag)
