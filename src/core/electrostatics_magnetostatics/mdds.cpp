@@ -281,9 +281,9 @@ void mdds_forces(const ParticleRange &particles,
 
   /* Number of image boxes considered */
   const Vector3i ncut =
-      mdds_n_replicas * Vector3i{static_cast<int>(PERIODIC(0)),
-                                 static_cast<int>(PERIODIC(1)),
-                                 static_cast<int>(PERIODIC(2))};
+      mdds_n_replicas * Vector3i{static_cast<int>(PERIODIC(0) != 0),
+                                 static_cast<int>(PERIODIC(1) != 0),
+                                 static_cast<int>(PERIODIC(2) != 0)};
   auto const with_replicas = (ncut.norm2() > 0);
 
   /* Range of particles we calculate the ia for on this node */
@@ -310,7 +310,9 @@ void mdds_forces(const ParticleRange &particles,
 
       ParticleForce fij{};
       for_each_image(ncut, [&](int nx, int ny, int nz) {
-        fij += pair_force(d, pi->m, pj->m);
+        auto const rn = d +
+                        Vector3d{nx * box_l[0], ny * box_l[1], nz * box_l[2]};
+        fij += pair_force(rn, pi->m, pj->m);
       });
 
       fi += fij;
@@ -330,12 +332,14 @@ void mdds_forces(const ParticleRange &particles,
   /* Interaction with all the other particles */
   p = local_interacting_particles.begin();
   for (auto pi = begin; pi != end; ++pi, ++p) {
+    // red particles
     auto fi = image_sum(all_posmom.begin(), begin, pi, with_replicas, ncut,
                         ParticleForce{},
                         [pi](Vector3d const &rn, Vector3d const &mj) {
                           return pair_force(rn, pi->m, mj);
                         });
 
+    // black particles
     fi += image_sum(end, all_posmom.end(), pi, with_replicas, ncut,
                     ParticleForce{},
                     [pi](Vector3d const &rn, Vector3d const &mj) {
@@ -376,9 +380,9 @@ double mdds_energy(const ParticleRange &particles,
 
   /* Number of image boxes considered */
   const Vector3i ncut =
-      mdds_n_replicas * Vector3i{static_cast<int>(PERIODIC(0)),
-                                 static_cast<int>(PERIODIC(1)),
-                                 static_cast<int>(PERIODIC(2))};
+      mdds_n_replicas * Vector3i{static_cast<int>(PERIODIC(0) != 0),
+                                 static_cast<int>(PERIODIC(1) != 0),
+                                 static_cast<int>(PERIODIC(2) != 0)};
   auto const with_replicas = (ncut.norm2() > 0);
   /* Range of particles we calculate the ia for on this node */
   auto begin = all_posmom.begin() + offset;
