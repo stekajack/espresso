@@ -70,6 +70,8 @@ iall_gatherv_impl(const boost::mpi::communicator &comm, const T *in_values,
                   int in_size, T *out_values, const int *sizes,
                   const int *displs, boost::mpl::true_) {
   std::array<boost::mpi::request, 1> req;
+  auto request_ptr = req[0].trivial().get_ptr();
+  assert(request_ptr != nullptr);
   MPI_Datatype type = boost::mpi::get_mpi_datatype<T>();
 
   /* in-place ? */
@@ -77,12 +79,12 @@ iall_gatherv_impl(const boost::mpi::communicator &comm, const T *in_values,
     BOOST_MPI_CHECK_RESULT(MPI_Iallgatherv,
                            (MPI_IN_PLACE, 0, type, out_values,
                             const_cast<int *>(sizes), const_cast<int *>(displs),
-                            type, comm, req[0].m_requests));
+                            type, comm, request_ptr));
   } else {
     BOOST_MPI_CHECK_RESULT(
         MPI_Iallgatherv, (const_cast<T *>(in_values), in_size, type, out_values,
                           const_cast<int *>(sizes), const_cast<int *>(displs),
-                          type, comm, req[0].m_requests));
+                          type, comm, request_ptr));
   }
 
   return req;
