@@ -24,10 +24,10 @@ cdef extern from "integrate.hpp":
     double get_time_step()
 
 cdef extern from "integrate.hpp" nogil:
-    cdef int python_integrate(int n_steps, cbool recalc_forces, int reuse_forces)
-    cdef int mpi_steepest_descent(int max_steps)
+    cdef int python_integrate(int n_steps, cbool recalc_forces, int reuse_forces, cbool spara_lb)
+    cdef int mpi_steepest_descent(int max_steps, cbool spara_lb)
     cdef extern cbool set_py_interrupt
 
-cdef inline int _integrate(int nSteps, cbool recalc_forces, int reuse_forces):
+cdef inline int _integrate(int nSteps, cbool recalc_forces, int reuse_forces, cbool spara_lb):
     with nogil:
-        return python_integrate(nSteps, recalc_forces, reuse_forces)
+        return python_integrate(nSteps, recalc_forces, reuse_forces, spara_lb)

@@ -101,7 +101,7 @@ class Integrator(ScriptInterfaceHelper):
 
     """
 
-    def run(self, steps=1, recalc_forces=False, reuse_forces=False):
+    def run(self, steps=1, recalc_forces=False, reuse_forces=False, spara_lb=False):
         """
         Run the integrator.
 
@@ -123,7 +123,7 @@ class Integrator(ScriptInterfaceHelper):
         if steps < 0:
             raise ValueError("steps must be positive")
 
-        _integrate(steps, recalc_forces, reuse_forces)
+        _integrate(steps, recalc_forces, reuse_forces, spara_lb)
 
         if integrate.set_py_interrupt:
             PyErr_SetInterrupt()
@@ -179,7 +179,7 @@ class SteepestDescent(Integrator):
         utils.check_type_or_throw_except(steps, 1, int, "steps must be an int")
         assert steps >= 0, "steps has to be positive"
 
-        integrated = mpi_steepest_descent(steps)
+        integrated = mpi_steepest_descent(steps, False)
 
         utils.handle_errors("Encountered errors during integrate")
 

@@ -251,7 +251,7 @@ static void integrator_step_2(ParticleRange const &particles, double kT) {
   }
 }
 
-int integrate(int n_steps, int reuse_forces) {
+int integrate(int n_steps, int reuse_forces, bool spara_lb) {
   ESPRESSO_PROFILER_CXX_MARK_FUNCTION;
 
   // Prepare particle structure and run sanity checks of all active algorithms
@@ -262,9 +262,31 @@ int integrate(int n_steps, int reuse_forces) {
     return 0;
 
   // Additional preparations for the first integration step
-  if (reuse_forces == -1 || (recalc_forces && reuse_forces != 1)) {
+  if ((reuse_forces == -1 || (recalc_forces && reuse_forces != 1)) && spara_lb == false) {
     ESPRESSO_PROFILER_MARK_BEGIN("Initial Force Calculation");
     lb_lbcoupling_deactivate();
+
+#ifdef VIRTUAL_SITES
+     virtual_sites()->update();
+ #endif
+
+     // Communication step: distribute ghost positions
+     cells_update_ghosts(global_ghost_flags());
+
+     force_calc(cell_structure, time_step, temperature);
+
+     if (integ_switch != INTEG_METHOD_STEEPEST_DESCENT) {
+ #ifdef ROTATION
+       convert_initial_torques(cell_structure.local_particles());
+ #endif
+     }
+
+     ESPRESSO_PROFILER_MARK_END("Initial Force Calculation");
+   }
+
+   if ((reuse_forces == -1 || (recalc_forces && reuse_forces != 1)) &&
+       spara_lb == true) {
+     ESPRESSO_PROFILER_MARK_BEGIN("Initial Force Calculation");
 
 #ifdef VIRTUAL_SITES
     virtual_sites()->update();
@@ -419,8 +441,7 @@ int integrate(int n_steps, int reuse_forces) {
   return integrated_steps;
 }
 
-int python_integrate(int n_steps, bool recalc_forces_par,
-                     bool reuse_forces_par) {
+int python_integrate(int n_steps, bool recalc_forces_par, bool reuse_forces_par, bool spara_lb) {
 
   assert(n_steps >= 0);
 
@@ -459,7 +480,7 @@ int python_integrate(int n_steps, bool recalc_forces_par,
     /* Integrate to either the next accumulator update, or the
      * end, depending on what comes first. */
     auto const steps = std::min((n_steps - i), auto_update_next_update());
-    if (mpi_integrate(steps, reuse_forces))
+    if (mpi_integrate(steps, reuse_forces, spara_lb))
       return ES_ERROR;
 
     reuse_forces = 1;
@@ -470,35 +491,35 @@ int python_integrate(int n_steps, bool recalc_forces_par,
   }
 
   if (n_steps == 0) {
-    if (mpi_integrate(0, reuse_forces))
+    if (mpi_integrate(0, reuse_forces, spara_lb))
       return ES_ERROR;
   }
 
   return ES_OK;
 }
 
-static int mpi_steepest_descent_local(int steps) {
-  return integrate(steps, -1);
+static int mpi_steepest_descent_local(int steps, bool spara_lb) {
+  return integrate(steps, -1, spara_lb);
 }
 
 REGISTER_CALLBACK_MAIN_RANK(mpi_steepest_descent_local)
 
-int mpi_steepest_descent(int steps) {
+int mpi_steepest_descent(int steps, bool spara_lb) {
   return mpi_call(Communication::Result::main_rank, mpi_steepest_descent_local,
-                  steps);
+                  steps, spara_lb);
 }
 
-static int mpi_integrate_local(int n_steps, int reuse_forces) {
-  integrate(n_steps, reuse_forces);
+static int mpi_integrate_local(int n_steps, int reuse_forces, bool spara_lb) {
+  integrate(n_steps, reuse_forces, spara_lb);
 
   return check_runtime_errors_local();
 }
 
 REGISTER_CALLBACK_REDUCTION(mpi_integrate_local, std::plus<int>())
 
-int mpi_integrate(int n_steps, int reuse_forces) {
+int mpi_integrate(int n_steps, int reuse_forces, bool spara_lb) {
   return mpi_call(Communication::Result::reduction, std::plus<int>(),
-                  mpi_integrate_local, n_steps, reuse_forces);
+                  mpi_integrate_local, n_steps, reuse_forces, spara_lb);
 }
 
 double interaction_range() {
