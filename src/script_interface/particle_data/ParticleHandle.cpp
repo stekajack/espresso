@@ -211,6 +211,13 @@ ParticleHandle::ParticleHandle() {
        },
        [this]() { return particle().dipm(); }},
 #endif // DIPOLES
+#ifdef DIPSUS
+      {"dip_fld",
+       [this](Variant const &value) {
+         set_particle_dip_fld(m_pid, get_value<Utils::Vector3d>(value));
+       },
+       [this]() { return particle().dip_fld(); }},
+#endif
 #ifdef ROTATIONAL_INERTIA
       {"rinertia",
        [this](Variant const &value) {

@@ -40,6 +40,7 @@
 #include "cells.hpp"
 #include "collision.hpp"
 #include "communication.hpp"
+#include "energy.hpp"
 #include "errorhandling.hpp"
 #include "event.hpp"
 #include "forces.hpp"
@@ -416,6 +417,11 @@ int integrate(int n_steps, int reuse_forces) {
     synchronize_npt_state();
   }
 #endif
+
+#ifdef DIPOLES
+  calc_long_range_fields(cell_structure);
+#endif // DIPOLES
+
   return integrated_steps;
 }
 

@@ -171,6 +171,11 @@ void set_particle_dip(int part, Utils::Vector3d const &dip);
 void set_particle_dipm(int part, double dipm);
 #endif
 
+#ifdef DIPSUS
+
+void set_particle_dip_fld(int part, const Utils::Vector3d &dip_fld);
+#endif
+
 #ifdef VIRTUAL_SITES
 /** Call only on the head node: set particle virtual flag.
  *  @param part the particle.

@@ -47,6 +47,9 @@
 #include <stdexcept>
 #include <type_traits>
 
+#ifdef DIPSUS
+using MagnetostaticsActor = boost::variant<std::shared_ptr<DipolarDirectSum>>;
+#else
 using MagnetostaticsActor =
     boost::variant<std::shared_ptr<DipolarDirectSum>,
 #ifdef DIPOLAR_DIRECT_SUM
@@ -63,6 +66,7 @@ using MagnetostaticsActor =
 #endif
                    std::shared_ptr<DipolarLayerCorrection>>;
 
+#endif
 extern boost::optional<MagnetostaticsActor> magnetostatics_actor;
 
 /** Get the magnetostatics prefactor. */
@@ -104,6 +108,7 @@ void on_cell_structure_change();
 
 void calc_long_range_force(ParticleRange const &particles);
 double calc_energy_long_range(ParticleRange const &particles);
+double calc_energy_long_field(ParticleRange const &particles);
 
 namespace detail {
 bool flag_all_reduce(bool flag);

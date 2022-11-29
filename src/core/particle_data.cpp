@@ -113,6 +113,9 @@ using UpdatePropertyMessage = boost::variant
 #ifdef DIPOLES
         , UpdateProperty<double, &Prop::dipm>
 #endif
+#ifdef DIPSUS
+        , UpdateProperty<Utils::Vector3d, &Prop::dip_fld>
+#endif
 #ifdef VIRTUAL_SITES
         , UpdateProperty<bool, &Prop::is_virtual>
 #ifdef VIRTUAL_SITES_RELATIVE
@@ -476,6 +479,12 @@ void set_particle_dip(int part, Utils::Vector3d const &dip) {
 }
 #endif
 
+#ifdef DIPSUS
+void set_particle_dip_fld(int part, const Utils::Vector3d &dip_fld) {
+  mpi_update_particle_property<Utils::Vector3d, &ParticleProperties::dip_fld>(
+      part, dip_fld);
+}
+#endif
 #ifdef VIRTUAL_SITES
 void set_particle_virtual(int part, bool is_virtual) {
   mpi_update_particle_property<bool, &ParticleProperties::is_virtual>(

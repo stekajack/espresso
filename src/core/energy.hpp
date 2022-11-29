@@ -27,7 +27,7 @@
  */
 
 #include "Observable_stat.hpp"
-
+#include "cell_system/CellStructure.hpp"
 #include <memory>
 
 /** Parallel energy calculation. */
@@ -51,3 +51,6 @@ double mpi_observable_compute_energy();
 double particle_short_range_energy_contribution(int pid);
 
 #endif
+
+/** Calculate dipole fields (mdds only for now). */
+void calc_long_range_fields(CellStructure &cell_structure);

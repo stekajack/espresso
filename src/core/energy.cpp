@@ -33,6 +33,7 @@
 #include "integrate.hpp"
 #include "interactions.hpp"
 #include "nonbonded_interactions/nonbonded_interaction_data.hpp"
+#include <utils/mpi/iall_gatherv.hpp>
 
 #include "short_range_loop.hpp"
 
@@ -153,4 +154,13 @@ double particle_short_range_energy_contribution(int pid) {
     cell_structure.run_on_particle_short_range_neighbors(*p, kernel);
   }
   return ret;
+}
+
+void calc_long_range_fields(CellStructure &cell_structure) {
+  ESPRESSO_PROFILER_CXX_MARK_FUNCTION;
+#ifdef DIPOLES
+  /* calculate k-space part of the magnetostatic interaction. */
+  auto particles = cell_structure.local_particles();
+  Dipoles::calc_energy_long_field(particles);
+#endif // DIPOLES
 }

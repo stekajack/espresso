@@ -24,12 +24,12 @@
 
 #include "Actor_impl.hpp"
 
-#include "DipolarBarnesHutGpu.hpp"
+// #include "DipolarBarnesHutGpu.hpp"
 #include "DipolarDirectSum.hpp"
-#include "DipolarDirectSumGpu.hpp"
-#include "DipolarLayerCorrection.hpp"
-#include "DipolarP3M.hpp"
-#include "DipolarScafacos.hpp"
+// #include "DipolarDirectSumGpu.hpp"
+// #include "DipolarLayerCorrection.hpp"
+// #include "DipolarP3M.hpp"
+// #include "DipolarScafacos.hpp"
 
 #include "core/magnetostatics/dipoles.hpp"
 #include "core/magnetostatics/registration.hpp"
@@ -46,19 +46,19 @@ namespace Dipoles {
 void initialize(Utils::Factory<ObjectHandle> *om) {
 #ifdef DIPOLES
   om->register_new<DipolarDirectSum>("Dipoles::DipolarDirectSumCpu");
-#ifdef DIPOLAR_DIRECT_SUM
-  om->register_new<DipolarDirectSumGpu>("Dipoles::DipolarDirectSumGpu");
-#endif
-#ifdef DIPOLAR_BARNES_HUT
-  om->register_new<DipolarBarnesHutGpu>("Dipoles::DipolarBarnesHutGpu");
-#endif
-#ifdef DP3M
-  om->register_new<DipolarP3M>("Dipoles::DipolarP3M");
-#endif
-#ifdef SCAFACOS_DIPOLES
-  om->register_new<DipolarScafacos>("Dipoles::DipolarScafacos");
-#endif
-  om->register_new<DipolarLayerCorrection>("Dipoles::DipolarLayerCorrection");
+// #ifdef DIPOLAR_DIRECT_SUM
+//   om->register_new<DipolarDirectSumGpu>("Dipoles::DipolarDirectSumGpu");
+// #endif
+// #ifdef DIPOLAR_BARNES_HUT
+//   om->register_new<DipolarBarnesHutGpu>("Dipoles::DipolarBarnesHutGpu");
+// #endif
+// #ifdef DP3M
+//   om->register_new<DipolarP3M>("Dipoles::DipolarP3M");
+// #endif
+// #ifdef SCAFACOS_DIPOLES
+//   om->register_new<DipolarScafacos>("Dipoles::DipolarScafacos");
+// #endif
+//   om->register_new<DipolarLayerCorrection>("Dipoles::DipolarLayerCorrection");
 #endif // DIPOLES
 }
 

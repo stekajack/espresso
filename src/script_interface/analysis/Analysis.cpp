@@ -70,6 +70,16 @@ static void check_particle_type(int p_type) {
 
 Variant Analysis::do_call_method(std::string const &name,
                                  VariantMap const &parameters) {
+
+  if (name == "my_calculation") {
+    auto comm_cart = static_cast<MPI_Comm>(context()->get_comm());
+    int rank;
+    int world;
+    MPI_Comm_rank(comm_cart, &rank);
+    MPI_Comm_size(comm_cart, &world);
+    fprintf(stderr, "Starting processes %d out of %d\n", rank, world);
+    return {}; /* or return my_calculation(comm_cart); */
+  }
   if (name == "linear_momentum") {
     auto const local = calc_linear_momentum(
         get_value_or<bool>(parameters, "include_particles", true),

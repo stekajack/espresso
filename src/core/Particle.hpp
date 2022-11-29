@@ -153,6 +153,11 @@ struct ParticleProperties {
   double dipm = 0.;
 #endif
 
+#ifdef DIPSUS
+  /** dipole moment (absolute value) */
+  Utils::Vector3d dip_fld = {0., 0., 0.};
+#endif
+
 #ifdef VIRTUAL_SITES_RELATIVE
   /** The following properties define, with respect to which real particle a
    *  virtual site is placed and at what distance. The relative orientation of
@@ -231,7 +236,9 @@ struct ParticleProperties {
 #ifdef DIPOLES
     ar &dipm;
 #endif
-
+#ifdef DIPSUS
+    ar &dip_fld;
+#endif
 #ifdef VIRTUAL_SITES
     ar &is_virtual;
 #ifdef VIRTUAL_SITES_RELATIVE
@@ -505,6 +512,10 @@ public:
   auto const &dipm() const { return p.dipm; }
   auto &dipm() { return p.dipm; }
   auto calc_dip() const { return calc_director() * dipm(); }
+#endif
+#ifdef DIPSUS
+  auto const &dip_fld() const { return p.dip_fld; }
+  auto &dip_fld() { return p.dip_fld; }
 #endif
 #ifdef ROTATIONAL_INERTIA
   auto const &rinertia() const { return p.rinertia; }
