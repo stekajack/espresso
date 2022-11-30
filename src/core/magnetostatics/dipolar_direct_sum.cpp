@@ -119,7 +119,7 @@ auto dipole_field(Utils::Vector3d const &d, Utils::Vector3d const &m1) {
   auto const r5 = r3 * r2;
   auto const pe2 = m1 * d;
 
-  return m1 / r3 - 3.0 * pe2 * d / r5;
+  return 3.0 * pe2 * d / r5 - m1 / r3;
 }
 
 /**
@@ -429,19 +429,19 @@ DipolarDirectSum::dipole_field_at_part(ParticleRange const &particles) const {
   boost::mpi::wait_all(reqs.begin(), reqs.end());
 
   auto const local_posmom_begin = all_posmom.begin() + offset;
-  auto const local_posmom_end = local_posmom_begin + local_particles.size();
+  auto const local_posmom_end =
+      local_posmom_begin + static_cast<long>(local_particles.size());
 
   Utils::Vector3d u_init = {0., 0., 0.};
   auto p = local_particles.begin();
   for (auto pi = local_posmom_begin; pi != local_posmom_end; ++pi, ++p) {
-    auto u =
-        image_sum(pi, all_posmom.end(), pi, with_replicas, ncut, box_l, u_init,
-                  [](Utils::Vector3d const &rn, Utils::Vector3d const &mj) {
-                    return dipole_field(rn, mj);
-                  });
-    (*p)->dip_fld() = u;
+    auto u = image_sum(
+        all_posmom.begin(), all_posmom.end(), pi, with_replicas, ncut, box_l,
+        u_init, [](Utils::Vector3d const &rn, Utils::Vector3d const &mj) {
+          return dipole_field(rn, mj);
+        });
+    (*p)->dip_fld() = prefactor * u;
   }
-  // fprintf(stderr, "dipole_field_at_part\n");
   return 0.;
 }
 
