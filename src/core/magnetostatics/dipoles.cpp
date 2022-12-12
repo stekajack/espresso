@@ -209,15 +209,14 @@ double calc_energy_long_range(ParticleRange const &particles) {
   }
   return 0.;
 }
-#ifdef DIPOLAR_DIRECT_SUM
+
 double calc_energy_long_field(ParticleRange const &particles) {
   if (magnetostatics_actor) {
-    return boost::apply_visitor(LongRangeField{particles},
+    return boost::apply_visitor(LongRangeField(particles),
                                 *magnetostatics_actor);
   }
   return 0.;
 }
-#endif
 
 namespace detail {
 bool flag_all_reduce(bool flag) {

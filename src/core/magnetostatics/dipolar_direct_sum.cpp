@@ -405,11 +405,7 @@ double
 DipolarDirectSum::dipole_field_at_part(ParticleRange const &particles) const {
   auto const &box_l = ::box_geo.length();
   /* collect particle data */
-  std::vector<Particle *> local_particles;
-  std::vector<PosMom> all_posmom;
-  std::vector<boost::mpi::request> reqs;
-  int offset{0};
-  std::tie(local_particles, std::ignore, all_posmom, reqs, offset) =
+  auto [local_particles, all_posmom, reqs, offset] =
       gather_particle_data(particles, n_replicas);
 
   auto const ncut = get_n_cut(n_replicas);
