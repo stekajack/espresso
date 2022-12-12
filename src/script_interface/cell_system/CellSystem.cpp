@@ -33,7 +33,6 @@
 #include "core/tuning.hpp"
 
 #include <utils/Vector.hpp>
-#include <utils/as_const.hpp>
 
 #include <boost/mpi/collectives/gather.hpp>
 #include <boost/variant.hpp>
@@ -53,12 +52,12 @@ namespace CellSystem {
 
 static auto const &get_regular_decomposition() {
   return dynamic_cast<RegularDecomposition const &>(
-      Utils::as_const(::cell_structure).decomposition());
+      std::as_const(::cell_structure).decomposition());
 }
 
 static auto const &get_hybrid_decomposition() {
   return dynamic_cast<HybridDecomposition const &>(
-      Utils::as_const(::cell_structure).decomposition());
+      std::as_const(::cell_structure).decomposition());
 }
 
 CellSystem::CellSystem() {
@@ -207,6 +206,7 @@ Variant CellSystem::do_call_method(std::string const &name,
     return neighbors;
   }
   if (name == "non_bonded_loop_trace") {
+    on_observable_calc();
     std::vector<Variant> out;
     auto const pair_list = non_bonded_loop_trace();
     std::transform(pair_list.begin(), pair_list.end(), std::back_inserter(out),

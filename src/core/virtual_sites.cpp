@@ -66,7 +66,8 @@ calculate_vs_relate_to_params(Particle const &p_current,
   // than minimum global cutoff. If so, warn user.
   auto const dist = d.norm();
   auto const min_global_cut = get_min_global_cut();
-  if (dist > min_global_cut && n_nodes > 1) {
+  if (dist > min_global_cut && n_nodes > 1 &&
+      not virtual_sites()->get_override_cutoff_check()) {
     runtimeErrorMsg()
         << "Warning: The distance between virtual and non-virtual particle ("
         << dist << ") is larger than the minimum global cutoff ("
@@ -145,9 +146,8 @@ void vs_relate_to(int part_num, int relate_to) {
   auto const &p_current = get_particle_data(part_num);
   auto const &p_relate_to = get_particle_data(relate_to);
 
-  Utils::Quaternion<double> quat;
-  double dist;
-  std::tie(quat, dist) = calculate_vs_relate_to_params(p_current, p_relate_to);
+  auto const [quat, dist] =
+      calculate_vs_relate_to_params(p_current, p_relate_to);
 
   // Set the particle id of the particle we want to relate to, the distance
   // and the relative orientation
