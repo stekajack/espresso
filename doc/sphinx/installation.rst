@@ -168,10 +168,8 @@ To generate the Sphinx documentation, install the following packages:
 
 .. code-block:: bash
 
-    pip3 install --user \
-        'sphinx>=2.3.0,!=3.0.0' \
-        'sphinxcontrib-bibtex>=2.4.1' \
-        'sphinx-toggleprompt==0.0.5'
+    pip3 install --user -c requirements.txt \
+        sphinx sphinxcontrib-bibtex sphinx-toggleprompt
 
 To generate the Doxygen documentation, install the following packages:
 
@@ -311,7 +309,7 @@ Run the following commands:
       doxygen gsl numpy scipy ipython jupyter
     brew install hdf5-mpi
     brew link --force cython
-    pip install PyOpenGL matplotlib
+    pip install -c requirements.txt PyOpenGL matplotlib
 
 .. _Quick installation:
 
@@ -753,6 +751,7 @@ The following options control features from external libraries:
 * ``ESPRESSO_BUILD_WITH_SCAFACOS``: Build with ScaFaCoS support.
 * ``ESPRESSO_BUILD_WITH_GSL``: Build with GSL support.
 * ``ESPRESSO_BUILD_WITH_STOKESIAN_DYNAMICS`` Build with Stokesian Dynamics support.
+* ``ESPRESSO_BUILD_WITH_PYTHON``: Build with the Python interface.
 
 The following options control code instrumentation:
 
@@ -770,6 +769,7 @@ The following options control how the project is built and tested:
 * ``ESPRESSO_BUILD_WITH_CPPCHECK``: Run Cppcheck during compilation.
 * ``ESPRESSO_BUILD_WITH_CCACHE``: Enable compiler cache for faster rebuilds.
 * ``ESPRESSO_BUILD_TESTS``: Enable C++ and Python tests.
+* ``ESPRESSO_BUILD_BENCHMARKS``: Enable benchmarks.
 * ``ESPRESSO_CUDA_COMPILER`` (string): Select the CUDA compiler.
 * ``ESPRESSO_CTEST_ARGS`` (string): Arguments passed to the ``ctest`` command.
 * ``ESPRESSO_TEST_TIMEOUT``: Test timeout.
