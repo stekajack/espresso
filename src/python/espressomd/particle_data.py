@@ -417,6 +417,27 @@ class ParticleHandle(ScriptInterfaceHelper):
         pdict["bonds"] = self.bonds
         return pdict
 
+    def to_dict_of_god(self, list_prop=['pos', 'pos_folded', 'f', 'dip', 'dipm']):
+        """
+        Returns the particle's attributes as a dictionary.
+
+        It includes the content of ``particle_attributes``, minus a few exceptions:
+
+        - :attr:`~ParticleHandle.dip`, :attr:`~ParticleHandle.director`:
+          Setting only the director will overwrite the orientation of the
+          particle around the axis parallel to dipole moment/director.
+          Quaternions contain the full info.
+        - :attr:`~ParticleHandle.image_box`, :attr:`~ParticleHandle.node`
+
+        """
+
+        pdict = self.get_params()
+        p_dict_ret = self.get_params()
+        for k in pdict:
+            if k not in list_prop:
+                del p_dict_ret[k]
+        return p_dict_ret
+
     def __str__(self):
         res = collections.OrderedDict()
         # Id and pos first, then the rest
@@ -949,6 +970,36 @@ class ParticleSlice(ScriptInterfaceHelper):
         odict = {}
         for p in self:
             pdict = ParticleHandle(id=p.id).to_dict()
+            for p_key, p_value in pdict.items():
+                if p_key in odict:
+                    odict[p_key].append(p_value)
+                else:
+                    odict[p_key] = [p_value]
+        return odict
+
+    def to_dict_of_god(self):
+        """
+        Returns the particles attributes as a dictionary.
+
+        It can be used to save the particle data and recover it by using
+
+        >>> p = system.part.add(...)
+        >>> particle_dict = p.to_dict()
+        >>> system.part.add(particle_dict)
+
+        It includes the content of ``particle_attributes``, minus a few exceptions:
+
+        - :attr:`~ParticleHandle.dip`, :attr:`~ParticleHandle.director`:
+          Setting only the director will overwrite the orientation of the
+          particle around the axis parallel to dipole moment/director.
+          Quaternions contain the full info.
+        - :attr:`~ParticleHandle.image_box`, :attr:`~ParticleHandle.node`
+
+        """
+
+        odict = {}
+        for p in self:
+            pdict = ParticleHandle(id=p.id).to_dict_of_god()
             for p_key, p_value in pdict.items():
                 if p_key in odict:
                     odict[p_key].append(p_value)

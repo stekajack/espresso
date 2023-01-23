@@ -39,6 +39,8 @@
 #include <boost/mpi/communicator.hpp>
 #include <boost/range/counting_range.hpp>
 
+#include <nlopt.hpp>
+
 #include <mpi.h>
 
 #include <algorithm>
