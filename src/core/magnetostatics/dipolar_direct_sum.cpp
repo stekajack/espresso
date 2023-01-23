@@ -401,7 +401,7 @@ DipolarDirectSum::long_range_energy(ParticleRange const &particles) const {
 
   return prefactor * u;
 }
-
+// some comment to be deleted
 double
 DipolarDirectSum::dipole_field_at_part(ParticleRange const &particles) const {
   auto const &box_l = ::box_geo.length();
