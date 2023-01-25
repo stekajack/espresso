@@ -43,10 +43,12 @@
 
 #include <mpi.h>
 
+#include "rotation.hpp"
 #include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <iterator>
+#include <random>
 #include <stdexcept>
 #include <tuple>
 #include <utility>
@@ -429,6 +431,142 @@ DipolarDirectSum::dipole_field_at_part(ParticleRange const &particles) const {
           return dipole_field(rn, mj);
         });
     (*p)->dip_fld() = prefactor * u;
+  }
+  return 0.;
+}
+
+double phi_objective(unsigned n, const double *x, double *grad,
+                     void *my_func_data) {
+  double phi = x[0];
+  double *params = (double *)my_func_data;
+  double theta = params[0];
+  double h = params[1];
+  if (grad) {
+    grad[0] = 0.5 * sin(2 * (phi - theta)) + h * sin(phi);
+  }
+  return 0.25 - 0.25 * cos(2 * (phi - theta)) - h * cos(phi);
+}
+
+double inv_phi_objective(unsigned n, const double *x, double *grad,
+                         void *my_func_data) {
+  double phi = x[0];
+  double *params = (double *)my_func_data;
+  double theta = params[0];
+  double h = params[1];
+  if (grad) {
+    grad[0] = -0.5 * sin(2 * (phi - theta)) - h * sin(phi);
+  }
+  return -0.25 + 0.25 * cos(2 * (phi - theta)) + h * cos(phi);
+}
+
+double DipolarDirectSum::funct(double theta, double h, double phi0) const {
+  std::default_random_engine generator;
+  std::uniform_real_distribution<double> distribution(0.0, 1.0);
+  double eps_phi = 1e-3;
+
+  nlopt::opt opt(nlopt::LN_BOBYQA, 1);
+  double params[] = {theta, h};
+  opt.set_min_objective(phi_objective, &params);
+
+  opt.set_xtol_rel(1e-15);
+  opt.set_lower_bounds(phi0 - M_PI);
+  opt.set_upper_bounds(phi0 + M_PI);
+  std::vector<double> x(1);
+  x[0] = phi0 + eps_phi;
+  double min1;
+  opt.optimize(x, min1);
+
+  x[0] = phi0 + eps_phi - M_PI;
+  double min2;
+  opt.optimize(x, min2);
+  if (min2 < -M_PI) {
+    min2 += 2. * M_PI;
+  } else if (min2 > M_PI) {
+    min2 -= 2. * M_PI;
+  }
+  double sol;
+  if (fabs(min1 - min2) > 1.e-7) {
+    nlopt::opt opt(nlopt::LN_BOBYQA, 1);
+    opt.set_min_objective(inv_phi_objective, &params);
+    opt.set_xtol_rel(1e-15);
+    opt.set_lower_bounds(phi0 - M_PI);
+    opt.set_upper_bounds(phi0 + M_PI);
+    std::vector<double> x(1);
+    x[0] = phi0 + eps_phi;
+    double max1;
+    opt.optimize(x, max1);
+
+    x[0] = phi0 + eps_phi - M_PI;
+    double max2;
+    opt.optimize(x, max2);
+
+    if (max1 < -M_PI) {
+      max1 += 2. * M_PI;
+    } else if (max1 > M_PI) {
+      max1 -= 2. * M_PI;
+    }
+    if (max2 < -M_PI) {
+      max2 += 2. * M_PI;
+    } else if (max2 > M_PI) {
+      max2 -= 2. * M_PI;
+    }
+
+    double b1 = phi_objective(1, &max1, nullptr, &params) -
+                phi_objective(1, &min1, nullptr, &params);
+    double b2 = phi_objective(1, &max2, nullptr, &params) -
+                phi_objective(1, &min1, nullptr, &params);
+    // double p12 = 0.5 * part.p0 *
+    //              (exp(-b1 * part.kT_KVm_inv) + exp(-b2 * part.kT_KVm_inv));
+    double p12 = 0.5 * (exp(-b1) + exp(-b2));
+    if (distribution(generator) < p12) {
+      sol = min2;
+    } else {
+      sol = min1;
+    }
+  } else {
+    sol = min1;
+  }
+  // part.phi0 = sol;
+  return sol;
+}
+
+double
+DipolarDirectSum::stoner_wolfarth_main(ParticleRange const &particles) const {
+  /* collect particle data */
+  std::vector<Particle *> local_real_particles;
+  std::vector<Particle *> local_virt_particles;
+  local_real_particles.reserve(particles.size());
+  local_virt_particles.reserve(particles.size());
+  for (auto &p : particles) {
+    if (p.sw_real()) {
+      local_real_particles.emplace_back(&p);
+    } else if (p.sw_virt()) {
+      local_real_particles.emplace_back(&p);
+    }
+  }
+  // must assert that there is an equal number of sw_reals and sw_virts
+
+  Utils::Vector3d const &ext_fld = {1., 0., 0.};
+  double theta, Hkinv, phi0;
+  double h = ext_fld.norm() * Hkinv;
+  auto e_h = ext_fld.normalized();
+  auto p = local_virt_particles.begin();
+  for (auto pi = local_real_particles.begin(); pi != local_real_particles.end();
+       ++pi, ++p) {
+    Utils::Vector3d e_k = (*pi)->calc_director();
+    auto rot_axis = vector_product(e_h, e_k).normalized();
+    if (theta > M_PI / 2) {
+      theta = M_PI - theta;
+      h = -h;
+      e_h = -1 * e_h;
+    }
+    auto phi = fmod(funct(theta, h, phi0), 2 * M_PI);
+    auto cos_phi = cos(phi);
+    auto sin_phi = sin(phi);
+    auto mom = e_h * cos_phi + rot_axis * sin_phi;
+    auto const [quat, dipm] = convert_dip_to_quat(prefactor * mom);
+    (*p)->dipm() = dipm;
+    (*p)->quat() = quat;
   }
   return 0.;
 }

@@ -156,6 +156,8 @@ struct ParticleProperties {
 #ifdef DIPSUS
   /** dipole moment (absolute value) */
   Utils::Vector3d dip_fld = {0., 0., 0.};
+  bool sw_real = false;
+  bool sw_virt = false;
 #endif
 
 #ifdef VIRTUAL_SITES_RELATIVE
@@ -238,6 +240,8 @@ struct ParticleProperties {
 #endif
 #ifdef DIPSUS
     ar &dip_fld;
+    ar &sw_real;
+    ar &sw_virt;
 #endif
 #ifdef VIRTUAL_SITES
     ar &is_virtual;
@@ -516,6 +520,8 @@ public:
 #ifdef DIPSUS
   auto const &dip_fld() const { return p.dip_fld; }
   auto &dip_fld() { return p.dip_fld; }
+  bool sw_real() const { return p.sw_real; }
+  bool sw_virt() const { return p.sw_real; }
 #endif
 #ifdef ROTATIONAL_INERTIA
   auto const &rinertia() const { return p.rinertia; }

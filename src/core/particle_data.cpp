@@ -114,6 +114,8 @@ using UpdatePropertyMessage = boost::variant
 #endif
 #ifdef DIPSUS
         , UpdateProperty<Utils::Vector3d, &Prop::dip_fld>
+        , UpdateProperty<bool, &Prop::sw_real>
+        , UpdateProperty<bool, &Prop::sw_virt>
 #endif
 #ifdef VIRTUAL_SITES
         , UpdateProperty<bool, &Prop::is_virtual>
@@ -480,6 +482,14 @@ void set_particle_dip_fld(int part, const Utils::Vector3d &dip_fld) {
   mpi_update_particle_property<Utils::Vector3d, &ParticleProperties::dip_fld>(
       part, dip_fld);
 }
+void set_particle_sw_real(int part, bool sw_real) {
+  mpi_update_particle_property<bool, &ParticleProperties::sw_real>(part,
+                                                                   sw_real);
+}
+void set_particle_sw_virt(int part, bool sw_virt) {
+  mpi_update_particle_property<bool, &ParticleProperties::sw_real>(part,
+                                                                   sw_virt);
+}
 #endif
 #ifdef VIRTUAL_SITES
 void set_particle_virtual(int part, bool is_virtual) {
@@ -786,10 +796,10 @@ void auto_exclusions(int distance) {
   }
 
   /* setup the exclusions and clear the arrays. We do not setup the exclusions
-     up there, since on_part_change clears the partCfg, so that we would have to
-     restore it continuously. Of course this could be optimized by bundling the
-     exclusions, but this is only done once and the overhead is as much as for
-     setting the bonds, which the user apparently accepted.
+     up there, since on_part_change clears the partCfg, so that we would have
+     to restore it continuously. Of course this could be optimized by bundling
+     the exclusions, but this is only done once and the overhead is as much as
+     for setting the bonds, which the user apparently accepted.
   */
   for (auto &kv : partners) {
     auto const id = kv.first;

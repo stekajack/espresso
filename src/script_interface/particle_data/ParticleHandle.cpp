@@ -219,6 +219,16 @@ ParticleHandle::ParticleHandle() {
          set_particle_dip_fld(m_pid, get_value<Utils::Vector3d>(value));
        },
        [this]() { return particle().dip_fld(); }},
+      {"sw_real",
+       [this](Variant const &value) {
+         set_particle_sw_real(m_pid, get_value<bool>(value));
+       },
+       [this]() { return particle().sw_real(); }},
+      {"sw_virt",
+       [this](Variant const &value) {
+         set_particle_sw_virt(m_pid, get_value<bool>(value));
+       },
+       [this]() { return particle().sw_virt(); }},
 #endif
 #ifdef ROTATIONAL_INERTIA
       {"rinertia",

@@ -196,6 +196,16 @@ struct LongRangeField : public boost::static_visitor<double> {
   }
 };
 
+struct SWDipoleField : public boost::static_visitor<double> {
+  ParticleRange const &m_particles;
+  explicit SWDipoleField(ParticleRange const &particles)
+      : m_particles(particles) {}
+
+  double operator()(std::shared_ptr<DipolarDirectSum> const &actor) const {
+    return actor->stoner_wolfarth_main(m_particles);
+  }
+};
+
 void calc_long_range_force(ParticleRange const &particles) {
   if (magnetostatics_actor) {
     boost::apply_visitor(LongRangeForce(particles), *magnetostatics_actor);
@@ -213,6 +223,14 @@ double calc_energy_long_range(ParticleRange const &particles) {
 double calc_energy_long_field(ParticleRange const &particles) {
   if (magnetostatics_actor) {
     return boost::apply_visitor(LongRangeField(particles),
+                                *magnetostatics_actor);
+  }
+  return 0.;
+}
+
+double calc_stoner_wolfarth_dip(ParticleRange const &particles) {
+  if (magnetostatics_actor) {
+    return boost::apply_visitor(SWDipoleField(particles),
                                 *magnetostatics_actor);
   }
   return 0.;

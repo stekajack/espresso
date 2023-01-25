@@ -418,8 +418,9 @@ int integrate(int n_steps, int reuse_forces) {
   }
 #endif
 
-#ifdef DIPOLES
+#ifdef DIPSUS
   calc_long_range_fields(cell_structure);
+  calc_stoner_wolfarth_dip(cell_structure);
 #endif // DIPOLES
 
   return integrated_steps;
