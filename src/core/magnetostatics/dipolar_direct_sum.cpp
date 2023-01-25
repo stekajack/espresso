@@ -402,8 +402,7 @@ DipolarDirectSum::long_range_energy(ParticleRange const &particles) const {
   return prefactor * u;
 }
 // some comment to be deleted
-double
-DipolarDirectSum::dipole_field_at_part(ParticleRange const &particles) const {
+void DipolarDirectSum::dipole_field_at_part(ParticleRange const &particles) const {
   auto const &box_l = ::box_geo.length();
   /* collect particle data */
   auto [local_particles, all_posmom, reqs, offset] =
@@ -428,7 +427,6 @@ DipolarDirectSum::dipole_field_at_part(ParticleRange const &particles) const {
         });
     (*p)->dip_fld() = prefactor * u;
   }
-  return 0.;
 }
 
 DipolarDirectSum::DipolarDirectSum(double prefactor, int n_replicas)

@@ -383,6 +383,10 @@ int integrate(int n_steps, int reuse_forces) {
       BondBreakage::process_queue();
     }
 
+#ifdef DIPSUS
+    calc_long_range_fields(cell_structure);
+#endif // DIPSUS
+
     integrated_steps++;
 
     if (check_runtime_errors(comm_cart))
@@ -417,10 +421,6 @@ int integrate(int n_steps, int reuse_forces) {
     synchronize_npt_state();
   }
 #endif
-
-#ifdef DIPOLES
-  calc_long_range_fields(cell_structure);
-#endif // DIPOLES
 
   return integrated_steps;
 }

@@ -161,6 +161,6 @@ void calc_long_range_fields(CellStructure &cell_structure) {
 #ifdef DIPOLES
   /* calculate k-space part of the magnetostatic interaction. */
   auto particles = cell_structure.local_particles();
-  Dipoles::calc_energy_long_field(particles);
+  Dipoles::calc_long_range_field(particles);
 #endif // DIPOLES
 }
