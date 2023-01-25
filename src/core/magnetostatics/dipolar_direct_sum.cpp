@@ -27,7 +27,9 @@
 
 #include "cells.hpp"
 #include "communication.hpp"
+#include "constraints/HomogeneousMagneticField.hpp"
 #include "errorhandling.hpp"
+#include "constraints.hpp"
 #include "grid.hpp"
 
 #include <utils/cartesian_product.hpp>
@@ -546,7 +548,14 @@ DipolarDirectSum::stoner_wolfarth_main(ParticleRange const &particles) const {
   }
   // must assert that there is an equal number of sw_reals and sw_virts
 
-  Utils::Vector3d const &ext_fld = {1., 0., 0.};
+  Utils::Vector3d ext_fld = {0., 0., 0.};
+  for (auto const &constraint : ::Constraints::constraints) {
+    auto const ptr = dynamic_cast<HomogeneousMagneticField const*>(&constraint);
+    if (ptr != nullptr) {
+      ext_fld += ptr->H();
+    }
+  }
+
   double theta, Hkinv, phi0;
   double h = ext_fld.norm() * Hkinv;
   auto e_h = ext_fld.normalized();
@@ -568,6 +577,7 @@ DipolarDirectSum::stoner_wolfarth_main(ParticleRange const &particles) const {
     (*p)->dipm() = dipm;
     (*p)->quat() = quat;
   }
+  on_dipoles_change();
   return 0.;
 }
 
