@@ -461,7 +461,8 @@ double inv_phi_objective(unsigned n, const double *x, double *grad,
   return -0.25 + 0.25 * cos(2 * (phi - theta)) + h * cos(phi);
 }
 
-double DipolarDirectSum::funct(double theta, double h, double phi0) const {
+double DipolarDirectSum::funct(double theta, double h, double phi0,
+                               double kT_KVm_inv) const {
   std::default_random_engine generator;
   std::uniform_real_distribution<double> distribution(0.0, 1.0);
   double eps_phi = 1e-3;
@@ -517,9 +518,8 @@ double DipolarDirectSum::funct(double theta, double h, double phi0) const {
                 phi_objective(1, &min1, nullptr, &params);
     double b2 = phi_objective(1, &max2, nullptr, &params) -
                 phi_objective(1, &min1, nullptr, &params);
-    // double p12 = 0.5 * part.p0 *
-    //              (exp(-b1 * part.kT_KVm_inv) + exp(-b2 * part.kT_KVm_inv));
-    double p12 = 0.5 * (exp(-b1) + exp(-b2));
+    //  a multiplicative factor p0 asumed to be 1!!!
+    double p12 = 0.5 * (exp(-b1 * kT_KVm_inv) + exp(-b2 * kT_KVm_inv));
     if (distribution(generator) < p12) {
       sol = min2;
     } else {
@@ -528,7 +528,6 @@ double DipolarDirectSum::funct(double theta, double h, double phi0) const {
   } else {
     sol = min1;
   }
-  // part.phi0 = sol;
   return sol;
 }
 
@@ -547,37 +546,35 @@ void DipolarDirectSum::stoner_wolfarth_main(
     }
   }
   // must assert that there is an equal number of sw_reals and sw_virts
-
   Utils::Vector3d ext_fld = {0., 0., 0.};
+  /* collect HomogeneousMagneticFields if active */
   for (auto const &constraint : ::Constraints::constraints) {
-    // auto const ptr =
-    //     dynamic_cast<::Constraints::HomogeneousMagneticField *const>(
-    //         &constraint);
     auto ptr = dynamic_cast<::Constraints::HomogeneousMagneticField *const>(
         &*constraint);
     if (ptr != nullptr) {
       ext_fld += ptr->H();
     }
   }
-
-  double theta, Hkinv, phi0;
-  double h = ext_fld.norm() * Hkinv;
-  auto e_h = ext_fld.normalized();
   auto p = local_virt_particles.begin();
   for (auto pi = local_real_particles.begin(); pi != local_real_particles.end();
        ++pi, ++p) {
+
+    ext_fld += (*p)->dip_fld();
+    double h = ext_fld.norm() * (*p)->Hkinv();
+    auto e_h = ext_fld.normalized();
     Utils::Vector3d e_k = (*pi)->calc_director();
+    double theta = acos(e_h * e_k);
     auto rot_axis = vector_product(e_h, e_k).normalized();
     if (theta > M_PI / 2) {
       theta = M_PI - theta;
       h = -h;
       e_h = -1 * e_h;
     }
-    auto phi = fmod(funct(theta, h, phi0), 2 * M_PI);
-    auto cos_phi = cos(phi);
-    auto sin_phi = sin(phi);
-    auto mom = e_h * cos_phi + rot_axis * sin_phi;
-    auto const [quat, dipm] = convert_dip_to_quat(prefactor * mom);
+    auto phi =
+        fmod(funct(theta, h, (*pi)->phi0(), (*pi)->kT_KVm_inv()), 2 * M_PI);
+    (*pi)->phi0() = phi;
+    auto mom = e_h * cos(phi) + rot_axis * sin(phi);
+    auto const [quat, dipm] = convert_dip_to_quat((*p)->sat_mag() * mom);
     (*p)->dipm() = dipm;
     (*p)->quat() = quat;
   }

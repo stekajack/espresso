@@ -116,6 +116,10 @@ using UpdatePropertyMessage = boost::variant
         , UpdateProperty<Utils::Vector3d, &Prop::dip_fld>
         , UpdateProperty<bool, &Prop::sw_real>
         , UpdateProperty<bool, &Prop::sw_virt>
+        , UpdateProperty<double, &Prop::phi0>
+        , UpdateProperty<double, &Prop::sat_mag>
+        , UpdateProperty<double, &Prop::Hkinv>
+        , UpdateProperty<double, &Prop::kT_KVm_inv>
 #endif
 #ifdef VIRTUAL_SITES
         , UpdateProperty<bool, &Prop::is_virtual>
@@ -489,6 +493,20 @@ void set_particle_sw_real(int part, bool sw_real) {
 void set_particle_sw_virt(int part, bool sw_virt) {
   mpi_update_particle_property<bool, &ParticleProperties::sw_real>(part,
                                                                    sw_virt);
+}
+void set_particle_phi0(int part, double phi0) {
+  mpi_update_particle_property<double, &ParticleProperties::phi0>(part, phi0);
+}
+void set_particle_sat_mag(int part, double sat_mag) {
+  mpi_update_particle_property<double, &ParticleProperties::sat_mag>(part,
+                                                                     sat_mag);
+}
+void set_particle_Hkinv(int part, double Hkinv) {
+  mpi_update_particle_property<double, &ParticleProperties::Hkinv>(part, Hkinv);
+}
+void set_particle_kT_KVm_inv(int part, double kT_KVm_inv) {
+  mpi_update_particle_property<double, &ParticleProperties::kT_KVm_inv>(
+      part, kT_KVm_inv);
 }
 #endif
 #ifdef VIRTUAL_SITES
