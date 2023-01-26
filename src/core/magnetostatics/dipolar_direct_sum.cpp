@@ -27,9 +27,9 @@
 
 #include "cells.hpp"
 #include "communication.hpp"
+#include "constraints.hpp"
 #include "constraints/HomogeneousMagneticField.hpp"
 #include "errorhandling.hpp"
-#include "constraints.hpp"
 #include "grid.hpp"
 
 #include <utils/cartesian_product.hpp>
@@ -45,6 +45,7 @@
 
 #include <mpi.h>
 
+#include "event.hpp"
 #include "rotation.hpp"
 #include <algorithm>
 #include <cassert>
@@ -408,8 +409,8 @@ DipolarDirectSum::long_range_energy(ParticleRange const &particles) const {
   return prefactor * u;
 }
 // some comment to be deleted
-double
-DipolarDirectSum::dipole_field_at_part(ParticleRange const &particles) const {
+void DipolarDirectSum::dipole_field_at_part(
+    ParticleRange const &particles) const {
   auto const &box_l = ::box_geo.length();
   /* collect particle data */
   auto [local_particles, all_posmom, reqs, offset] =
@@ -434,7 +435,6 @@ DipolarDirectSum::dipole_field_at_part(ParticleRange const &particles) const {
         });
     (*p)->dip_fld() = prefactor * u;
   }
-  return 0.;
 }
 
 double phi_objective(unsigned n, const double *x, double *grad,
@@ -532,8 +532,8 @@ double DipolarDirectSum::funct(double theta, double h, double phi0) const {
   return sol;
 }
 
-double
-DipolarDirectSum::stoner_wolfarth_main(ParticleRange const &particles) const {
+void DipolarDirectSum::stoner_wolfarth_main(
+    ParticleRange const &particles) const {
   /* collect particle data */
   std::vector<Particle *> local_real_particles;
   std::vector<Particle *> local_virt_particles;
@@ -550,7 +550,11 @@ DipolarDirectSum::stoner_wolfarth_main(ParticleRange const &particles) const {
 
   Utils::Vector3d ext_fld = {0., 0., 0.};
   for (auto const &constraint : ::Constraints::constraints) {
-    auto const ptr = dynamic_cast<HomogeneousMagneticField const*>(&constraint);
+    // auto const ptr =
+    //     dynamic_cast<::Constraints::HomogeneousMagneticField *const>(
+    //         &constraint);
+    auto ptr = dynamic_cast<::Constraints::HomogeneousMagneticField *const>(
+        &*constraint);
     if (ptr != nullptr) {
       ext_fld += ptr->H();
     }
@@ -578,7 +582,6 @@ DipolarDirectSum::stoner_wolfarth_main(ParticleRange const &particles) const {
     (*p)->quat() = quat;
   }
   on_dipoles_change();
-  return 0.;
 }
 
 DipolarDirectSum::DipolarDirectSum(double prefactor, int n_replicas)

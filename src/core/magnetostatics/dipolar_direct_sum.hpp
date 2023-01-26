@@ -49,9 +49,9 @@ struct DipolarDirectSum {
 
   double long_range_energy(ParticleRange const &particles) const;
   void add_long_range_forces(ParticleRange const &particles) const;
-  double dipole_field_at_part(ParticleRange const &particles) const;
+  void dipole_field_at_part(ParticleRange const &particles) const;
   double funct(double theta, double h, double phi0) const;
-  double stoner_wolfarth_main(ParticleRange const &particles) const;
+  void stoner_wolfarth_main(ParticleRange const &particles) const;
 };
 
 #endif // DIPOLES

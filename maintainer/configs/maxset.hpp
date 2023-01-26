@@ -35,6 +35,7 @@
 #ifdef SCAFACOS
 #define SCAFACOS_DIPOLES
 #endif
+#define DIPSUS
 
 #define ENGINE
 
