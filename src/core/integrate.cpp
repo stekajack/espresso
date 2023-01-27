@@ -382,7 +382,9 @@ int integrate(int n_steps, int reuse_forces) {
 #endif
       BondBreakage::process_queue();
     }
-
+/*will calculate the value fo dipole field at every intergration whihc might not
+ * be necessary! The idea is that the valu could be usefully for polarisable
+ * objects, whihc would need to be updated at every integration.*/
 #ifdef DIPSUS
     calc_long_range_fields(cell_structure);
 #endif // DIPSUS

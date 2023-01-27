@@ -401,8 +401,19 @@ DipolarDirectSum::long_range_energy(ParticleRange const &particles) const {
 
   return prefactor * u;
 }
-// some comment to be deleted
-void DipolarDirectSum::dipole_field_at_part(ParticleRange const &particles) const {
+/**
+ * @brief Calculate total dipole field at the position of each particle and
+ * store it in a part property called dip_fld.
+ *
+ * This employs a parallel N-square loop over all particles.
+ * Logically this is equivalent to the potential calculation
+ * in @ref DipolarDirectSum::long_range_energy, which calculates
+ * a naive N-square sum. The difference is summation range and kernel calcluated
+ * the dipole filed rather than the energy. Threfore the return in of type
+ * Vector3D.
+ */
+void DipolarDirectSum::dipole_field_at_part(
+    ParticleRange const &particles) const {
   auto const &box_l = ::box_geo.length();
   /* collect particle data */
   auto [local_particles, all_posmom, reqs, offset] =
