@@ -164,3 +164,12 @@ void calc_long_range_fields(CellStructure &cell_structure) {
   Dipoles::calc_long_range_field(particles);
 #endif // DIPOLES
 }
+
+void calc_stoner_wolfarth_dip(CellStructure &cell_structure) {
+  ESPRESSO_PROFILER_CXX_MARK_FUNCTION;
+#ifdef DIPSUS
+  /* calculate k-space part of the magnetostatic interaction. */
+  auto particles = cell_structure.local_particles();
+  Dipoles::calc_stoner_wolfarth_dip(particles);
+#endif // DIPOLES
+}

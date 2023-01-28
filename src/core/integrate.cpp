@@ -255,6 +255,8 @@ static void integrator_step_2(ParticleRange const &particles, double kT) {
 int integrate(int n_steps, int reuse_forces) {
   ESPRESSO_PROFILER_CXX_MARK_FUNCTION;
 
+  // auto const has_magnetic_field = find_magnetic_field_constraint();
+
   // Prepare particle structure and run sanity checks of all active algorithms
   on_integration_start(time_step);
 
@@ -322,7 +324,9 @@ int integrate(int n_steps, int reuse_forces) {
     {
       resort_particles_if_needed(particles);
     }
-
+    // if (has_magnetic_field) {
+    //   // TODO
+    // }
     // Propagate philox RNG counters
     philox_counter_increment();
 
@@ -387,7 +391,8 @@ int integrate(int n_steps, int reuse_forces) {
  * objects, whihc would need to be updated at every integration.*/
 #ifdef DIPSUS
     calc_long_range_fields(cell_structure);
-#endif // DIPSUS
+    calc_stoner_wolfarth_dip(cell_structure);
+#endif // DIPOLES
 
     integrated_steps++;
 

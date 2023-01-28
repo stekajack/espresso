@@ -174,6 +174,13 @@ void set_particle_dipm(int part, double dipm);
 #ifdef DIPSUS
 
 void set_particle_dip_fld(int part, const Utils::Vector3d &dip_fld);
+void set_particle_sw_real(int part, bool sw_real);
+void set_particle_sw_virt(int part, bool sw_virt);
+void set_particle_phi0(int part, double phi0);
+void set_particle_sat_mag(int part, double phi0);
+void set_particle_Hkinv(int part, double Hkinv);
+void set_particle_kT_KVm_inv(int part, double kT_KVm_inv);
+
 #endif
 
 #ifdef VIRTUAL_SITES

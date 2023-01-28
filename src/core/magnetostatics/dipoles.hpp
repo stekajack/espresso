@@ -91,8 +91,13 @@ using is_solver = std::is_convertible<std::shared_ptr<T>, MagnetostaticsActor>;
 /** @brief The dipolar method supports dipoles field calculation. */
 template <class T> struct has_dipoles_field : std::false_type {};
 #ifdef DIPSUS
-template <>
-struct has_dipoles_field<DipolarDirectSum> : std::true_type {};
+template <> struct has_dipoles_field<DipolarDirectSum> : std::true_type {};
+#endif // DIPSUS
+
+/** @brief The dipolar method supports stoner wolfarth calculation. */
+template <class T> struct has_sw : std::false_type {};
+#ifdef DIPSUS
+template <> struct has_sw<DipolarDirectSum> : std::true_type {};
 #endif // DIPSUS
 
 } // namespace traits
@@ -110,6 +115,7 @@ void on_periodicity_change();
 void on_cell_structure_change();
 
 void calc_long_range_field(ParticleRange const &particles);
+void calc_stoner_wolfarth_dip(ParticleRange const &particles);
 void calc_long_range_force(ParticleRange const &particles);
 double calc_energy_long_range(ParticleRange const &particles);
 
