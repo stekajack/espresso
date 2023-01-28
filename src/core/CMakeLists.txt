@@ -60,6 +60,10 @@ add_library(
 add_library(espresso::core ALIAS espresso_core)
 set_target_properties(espresso_core PROPERTIES CXX_CLANG_TIDY
                                                "${ESPRESSO_CXX_CLANG_TIDY}")
+if(ESPRESSO_BUILD_WITH_NLOPT)
+  target_include_directories(espresso_core PRIVATE "${nlopt_SOURCE_DIR}/src")
+  target_link_libraries(espresso_core PRIVATE nlopt)
+endif()
 
 if(ESPRESSO_BUILD_WITH_CUDA)
   target_sources(

@@ -121,4 +121,5 @@ HDF5 external
 SCAFACOS external
 GSL external
 STOKESIAN_DYNAMICS external
+NLOPT external
 VALGRIND_MARKERS external
