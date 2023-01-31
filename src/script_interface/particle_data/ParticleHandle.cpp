@@ -213,7 +213,7 @@ ParticleHandle::ParticleHandle() {
        },
        [this]() { return particle().dipm(); }},
 #endif // DIPOLES
-#ifdef DIPSUS
+#ifdef DIPOLE_FIELD_TRACKING
       {"dip_fld",
        [this](Variant const &value) {
          set_particle_dip_fld(m_pid, get_value<Utils::Vector3d>(value));

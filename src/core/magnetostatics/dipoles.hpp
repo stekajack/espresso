@@ -90,10 +90,9 @@ using is_solver = std::is_convertible<std::shared_ptr<T>, MagnetostaticsActor>;
 
 /** @brief The dipolar method supports dipoles field calculation. */
 template <class T> struct has_dipoles_field : std::false_type {};
-#ifdef DIPSUS
-template <>
-struct has_dipoles_field<DipolarDirectSum> : std::true_type {};
-#endif // DIPSUS
+#ifdef DIPOLE_FIELD_TRACKING
+template <> struct has_dipoles_field<DipolarDirectSum> : std::true_type {};
+#endif // DIPOLE_FIELD_TRACKING
 
 } // namespace traits
 

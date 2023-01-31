@@ -283,6 +283,9 @@ int integrate(int n_steps, int reuse_forces) {
     }
 
     ESPRESSO_PROFILER_MARK_END("Initial Force Calculation");
+#ifdef DIPOLE_FIELD_TRACKING
+    calc_long_range_fields(cell_structure);
+#endif // DIPOLE_FIELD_TRACKING
   }
 
   lb_lbcoupling_activate();
@@ -382,12 +385,14 @@ int integrate(int n_steps, int reuse_forces) {
 #endif
       BondBreakage::process_queue();
     }
-/*will calculate the value fo dipole field at every intergration whihc might not
- * be necessary! The idea is that the valu could be usefully for polarisable
- * objects, whihc would need to be updated at every integration.*/
-#ifdef DIPSUS
+    /*will calculate the value of dipole field at every intergration which might
+     * not be necessary! The idea is that the value could be usefully for
+     * polarisable objects, which would need to be updated at every
+     * integration.*/
+
+#ifdef DIPOLE_FIELD_TRACKING
     calc_long_range_fields(cell_structure);
-#endif // DIPSUS
+#endif // DIPOLE_FIELD_TRACKING
 
     integrated_steps++;
 

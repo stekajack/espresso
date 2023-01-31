@@ -35,7 +35,7 @@
 #ifdef SCAFACOS
 #define SCAFACOS_DIPOLES
 #endif
-#define DIPSUS
+#define DIPOLE_FIELD_TRACKING
 
 #define ENGINE
 

@@ -153,7 +153,7 @@ struct ParticleProperties {
   double dipm = 0.;
 #endif
 
-#ifdef DIPSUS
+#ifdef DIPOLE_FIELD_TRACKING
   /** dipole moment (absolute value) */
   Utils::Vector3d dip_fld = {0., 0., 0.};
 #endif
@@ -236,7 +236,7 @@ struct ParticleProperties {
 #ifdef DIPOLES
     ar &dipm;
 #endif
-#ifdef DIPSUS
+#ifdef DIPOLE_FIELD_TRACKING
     ar &dip_fld;
 #endif
 #ifdef VIRTUAL_SITES
@@ -513,7 +513,7 @@ public:
   auto &dipm() { return p.dipm; }
   auto calc_dip() const { return calc_director() * dipm(); }
 #endif
-#ifdef DIPSUS
+#ifdef DIPOLE_FIELD_TRACKING
   auto const &dip_fld() const { return p.dip_fld; }
   auto &dip_fld() { return p.dip_fld; }
 #endif

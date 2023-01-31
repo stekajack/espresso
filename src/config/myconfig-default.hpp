@@ -44,7 +44,6 @@
 #define MMM1D_GPU
 #endif
 #define DIPOLES
-#define DIPSUS
 
 // Active matter
 #define ENGINE
