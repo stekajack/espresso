@@ -7,11 +7,12 @@ import tests_common
 
 
 def dip_fld_kernel(dipx, dipy, dipz, mx, my, mz, x, y, z):
-    dx, dy, dz = x-dipx, y-dipy, z-dipz
+    dx, dy, dz = x - dipx, y - dipy, z - dipz
     dr = np.linalg.norm((dx, dy, dz))
     dr3, dr5 = pow(dr, 3.0), pow(dr, 5.0)
-    mr = dx*mx+dy*my+dz*mz
-    Hx, Hy, Hz = 3.*dx*mr/dr5-mx/dr3, 3.*dy*mr/dr5-my/dr3, 3.*dz*mr/dr5-mz/dr3
+    mr = dx * mx + dy * my + dz * mz
+    Hx, Hy, Hz = 3. * dx * mr / dr5 - mx / dr3, 3. * dy * \
+        mr / dr5 - my / dr3, 3. * dz * mr / dr5 - mz / dr3
     return Hx, Hy, Hz
 
 
@@ -32,7 +33,12 @@ def N2_loop(particle, slice_prop):
 
 def compare_dipole_fields(p_slice):
     slice_data = [(x.id, x.pos, x.dip) for x in p_slice]
-    ret_bool_list = [np.allclose(p.dip_fld, N2_loop(p, slice_data)) for p in p_slice]
+    ret_bool_list = [
+        np.allclose(
+            p.dip_fld,
+            N2_loop(
+                p,
+                slice_data)) for p in p_slice]
     return ret_bool_list
 
 
