@@ -491,7 +491,7 @@ void set_particle_sw_real(int part, bool sw_real) {
                                                                    sw_real);
 }
 void set_particle_sw_virt(int part, bool sw_virt) {
-  mpi_update_particle_property<bool, &ParticleProperties::sw_real>(part,
+  mpi_update_particle_property<bool, &ParticleProperties::sw_virt>(part,
                                                                    sw_virt);
 }
 void set_particle_phi0(int part, double phi0) {

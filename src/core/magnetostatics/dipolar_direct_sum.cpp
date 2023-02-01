@@ -22,6 +22,7 @@
 #include "config/config.hpp"
 
 #ifdef DIPOLES
+#define TWO_M_PI 2 * M_PI
 
 #include "magnetostatics/dipolar_direct_sum.hpp"
 
@@ -480,7 +481,7 @@ double DipolarDirectSum::funct(double theta, double h, double phi0,
   double params[] = {theta, h};
   opt.set_min_objective(phi_objective, &params);
 
-  opt.set_xtol_rel(1e-15);
+  opt.set_xtol_rel(1e-5);
   opt.set_lower_bounds(phi0 - M_PI);
   opt.set_upper_bounds(phi0 + M_PI);
   std::vector<double> x(1);
@@ -492,15 +493,15 @@ double DipolarDirectSum::funct(double theta, double h, double phi0,
   double min2;
   opt.optimize(x, min2);
   if (min2 < -M_PI) {
-    min2 += 2. * M_PI;
+    min2 += TWO_M_PI;
   } else if (min2 > M_PI) {
-    min2 -= 2. * M_PI;
+    min2 -= TWO_M_PI;
   }
   double sol;
   if (fabs(min1 - min2) > 1.e-7) {
     nlopt::opt opt(nlopt::LN_BOBYQA, 1);
     opt.set_min_objective(inv_phi_objective, &params);
-    opt.set_xtol_rel(1e-15);
+    opt.set_xtol_rel(1e-5);
     opt.set_lower_bounds(phi0 - M_PI);
     opt.set_upper_bounds(phi0 + M_PI);
     std::vector<double> x(1);
@@ -513,14 +514,14 @@ double DipolarDirectSum::funct(double theta, double h, double phi0,
     opt.optimize(x, max2);
 
     if (max1 < -M_PI) {
-      max1 += 2. * M_PI;
+      max1 += TWO_M_PI;
     } else if (max1 > M_PI) {
-      max1 -= 2. * M_PI;
+      max1 -= TWO_M_PI;
     }
     if (max2 < -M_PI) {
-      max2 += 2. * M_PI;
+      max2 += TWO_M_PI;
     } else if (max2 > M_PI) {
-      max2 -= 2. * M_PI;
+      max2 -= TWO_M_PI;
     }
 
     double b1 = phi_objective(1, &max1, nullptr, &params) -
@@ -548,10 +549,10 @@ void DipolarDirectSum::stoner_wolfarth_main(
   local_real_particles.reserve(particles.size());
   local_virt_particles.reserve(particles.size());
   for (auto &p : particles) {
-    if (p.sw_real()) {
+    if (p.sw_real() == 1) {
       local_real_particles.emplace_back(&p);
-    } else if (p.sw_virt()) {
-      local_real_particles.emplace_back(&p);
+    } else if (p.sw_virt() == 1) {
+      local_virt_particles.emplace_back(&p);
     }
   }
   // must assert that there is an equal number of sw_reals and sw_virts
@@ -569,18 +570,21 @@ void DipolarDirectSum::stoner_wolfarth_main(
        ++pi, ++p) {
 
     ext_fld += (*p)->dip_fld();
+    // this is B_apm for conversion hardocded for testing
+    // ext_fld = ext_fld * 22654.68;
+
     double h = ext_fld.norm() * (*p)->Hkinv();
     auto e_h = ext_fld.normalized();
     Utils::Vector3d e_k = (*pi)->calc_director();
     double theta = acos(e_h * e_k);
     auto rot_axis = vector_product(e_h, e_k).normalized();
-    if (theta > M_PI / 2) {
+    if (theta > M_PI_2) {
       theta = M_PI - theta;
       h = -h;
       e_h = -1 * e_h;
     }
     auto phi =
-        fmod(funct(theta, h, (*pi)->phi0(), (*pi)->kT_KVm_inv()), 2 * M_PI);
+        fmod(funct(theta, h, (*pi)->phi0(), (*pi)->kT_KVm_inv()), TWO_M_PI);
     (*pi)->phi0() = phi;
     auto mom = e_h * cos(phi) + rot_axis * sin(phi);
     auto const [quat, dipm] = convert_dip_to_quat((*p)->sat_mag() * mom);

@@ -538,7 +538,7 @@ public:
   auto const &dip_fld() const { return p.dip_fld; }
   auto &dip_fld() { return p.dip_fld; }
   bool sw_real() const { return p.sw_real; }
-  bool sw_virt() const { return p.sw_real; }
+  bool sw_virt() const { return p.sw_virt; }
   auto const &phi0() const { return p.phi0; }
   auto &phi0() { return p.phi0; }
   auto const &sat_mag() const { return p.sat_mag; }
