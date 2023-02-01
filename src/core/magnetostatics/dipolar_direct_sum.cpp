@@ -412,6 +412,7 @@ DipolarDirectSum::long_range_energy(ParticleRange const &particles) const {
  * the dipole filed rather than the energy. Threfore the return in of type
  * Vector3D.
  */
+#ifdef DIPOLE_FIELD_TRACKING
 void DipolarDirectSum::dipole_field_at_part(
     ParticleRange const &particles) const {
   auto const &box_l = ::box_geo.length();
@@ -439,7 +440,7 @@ void DipolarDirectSum::dipole_field_at_part(
     (*p)->dip_fld() = prefactor * u;
   }
 }
-
+#endif
 DipolarDirectSum::DipolarDirectSum(double prefactor, int n_replicas)
     : prefactor{prefactor}, n_replicas{n_replicas} {
   if (prefactor <= 0.) {

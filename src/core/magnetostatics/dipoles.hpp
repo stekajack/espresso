@@ -107,8 +107,9 @@ void on_boxl_change();
 void on_node_grid_change();
 void on_periodicity_change();
 void on_cell_structure_change();
-
+#ifdef DIPOLE_FIELD_TRACKING
 void calc_long_range_field(ParticleRange const &particles);
+#endif
 void calc_long_range_force(ParticleRange const &particles);
 double calc_energy_long_range(ParticleRange const &particles);
 

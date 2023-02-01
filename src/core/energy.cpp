@@ -155,12 +155,11 @@ double particle_short_range_energy_contribution(int pid) {
   }
   return ret;
 }
-
+#ifdef DIPOLE_FIELD_TRACKING
 void calc_long_range_fields(CellStructure &cell_structure) {
   ESPRESSO_PROFILER_CXX_MARK_FUNCTION;
-#ifdef DIPOLES
   /* calculate k-space part of the magnetostatic interaction. */
   auto particles = cell_structure.local_particles();
   Dipoles::calc_long_range_field(particles);
-#endif // DIPOLES
 }
+#endif
