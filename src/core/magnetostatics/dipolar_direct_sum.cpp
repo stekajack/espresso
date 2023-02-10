@@ -470,9 +470,16 @@ double inv_phi_objective(unsigned n, const double *x, double *grad,
   }
   return -0.25 + 0.25 * cos(2 * (phi - theta)) + h * cos(phi);
 }
+/*
+SW energy minimisation step with kinetic MC step. SW energy normalised by the
+anisotropy field H_k (Hkinv stored on part to avoid division, h is the reduced
+field  due to the normalisation)
 
+
+*/
 double DipolarDirectSum::funct(double theta, double h, double phi0,
-                               double kT_KVm_inv) const {
+                               double kT_KVm_inv, double tau0_inv,
+                               double dt) const {
   std::default_random_engine generator;
   std::uniform_real_distribution<double> distribution(0.0, 1.0);
   double eps_phi = 1e-3;
@@ -480,6 +487,12 @@ double DipolarDirectSum::funct(double theta, double h, double phi0,
   nlopt::opt opt(nlopt::LN_BOBYQA, 1);
   double params[] = {theta, h};
   opt.set_min_objective(phi_objective, &params);
+
+  /* relative tolerance should in principle be order k_bT. Minimise U_{SW} from
+   * both sides. Possible one global minimum of two local minima. Using
+   * constrained optimisation by quadratic approximations. See
+   * https://www.damtp.cam.ac.uk/user/na/NA_papers/NA2009_06.pdf
+   */
 
   opt.set_xtol_rel(1e-5);
   opt.set_lower_bounds(phi0 - M_PI);
@@ -498,6 +511,11 @@ double DipolarDirectSum::funct(double theta, double h, double phi0,
     min2 -= TWO_M_PI;
   }
   double sol;
+
+  /* If there more that one minimum in the U_{SW} run kinetic MC step. Find
+   * U_{SW} maxima to calculate the barried height for the jump probabilities.
+   * Same logic as before, same issues */
+
   if (fabs(min1 - min2) > 1.e-7) {
     nlopt::opt opt(nlopt::LN_BOBYQA, 1);
     opt.set_min_objective(inv_phi_objective, &params);
@@ -524,12 +542,17 @@ double DipolarDirectSum::funct(double theta, double h, double phi0,
       max2 -= TWO_M_PI;
     }
 
-    double b1 = phi_objective(1, &max1, nullptr, &params) -
-                phi_objective(1, &min1, nullptr, &params);
-    double b2 = phi_objective(1, &max2, nullptr, &params) -
-                phi_objective(1, &min1, nullptr, &params);
+    double b1 = (phi_objective(1, &max1, nullptr, &params) -
+                 phi_objective(1, &min1, nullptr, &params)) *
+                kT_KVm_inv;
+    double b2 = (phi_objective(1, &max2, nullptr, &params) -
+                 phi_objective(1, &min1, nullptr, &params)) *
+                kT_KVm_inv;
+    double tau1_inv = tau0_inv * exp(-b1);
+    double tau2_inv = tau0_inv * exp(-b2);
+
     //  a multiplicative factor p0 asumed to be 1!!!
-    double p12 = 0.5 * (exp(-b1 * kT_KVm_inv) + exp(-b2 * kT_KVm_inv));
+    double p12 = 0.5 * (2. - exp(-dt * tau1_inv) - exp(-dt * tau2_inv));
     if (distribution(generator) < p12) {
       sol = min2;
     } else {
@@ -556,6 +579,7 @@ void DipolarDirectSum::stoner_wolfarth_main(
     }
   }
   // must assert that there is an equal number of sw_reals and sw_virts
+  Utils::Vector3d cntrl = {0., 0., 0.};
   Utils::Vector3d ext_fld = {0., 0., 0.};
   /* collect HomogeneousMagneticFields if active */
   for (auto const &constraint : ::Constraints::constraints) {
@@ -565,33 +589,56 @@ void DipolarDirectSum::stoner_wolfarth_main(
       ext_fld += ptr->H();
     }
   }
-  auto p = local_virt_particles.begin();
-  for (auto pi = local_real_particles.begin(); pi != local_real_particles.end();
-       ++pi, ++p) {
+  if (ext_fld != cntrl) {
+    auto p = local_virt_particles.begin();
+    for (auto pi = local_real_particles.begin();
+         pi != local_real_particles.end(); ++pi, ++p) {
 
-    ext_fld += (*p)->dip_fld();
-    // this is B_apm for conversion hardocded for testing
-    // ext_fld = ext_fld * 22654.68;
+      ext_fld += (*p)->dip_fld();
 
-    double h = ext_fld.norm() * (*p)->Hkinv();
-    auto e_h = ext_fld.normalized();
-    Utils::Vector3d e_k = (*pi)->calc_director();
-    double theta = acos(e_h * e_k);
-    auto rot_axis = vector_product(e_h, e_k).normalized();
-    if (theta > M_PI_2) {
-      theta = M_PI - theta;
-      h = -h;
-      e_h = -1 * e_h;
+      double h = ext_fld.norm() * (*p)->Hkinv();
+      auto e_h = ext_fld.normalized();
+      // calc_director() result already normalised
+      Utils::Vector3d e_k = (*pi)->calc_director();
+      double theta = acos(e_h * e_k);
+      auto rot_axis = vector_product(e_h, e_k);
+      if (theta > M_PI_2) {
+        theta = M_PI - theta;
+        h = -h;
+        e_h = -e_h;
+      }
+      auto phi = fmod(funct(theta, h, (*pi)->phi0(), (*pi)->kT_KVm_inv(),
+                            (*pi)->tau0_inv(), (*pi)->dt_incr()),
+                      TWO_M_PI);
+      (*pi)->phi0() = phi;
+      auto mom = e_h * cos(phi) + rot_axis * sin(phi);
+      auto const [quat, dipm] = convert_dip_to_quat((*p)->sat_mag() * mom);
+      (*p)->dipm() = dipm;
+      (*p)->quat() = quat;
     }
-    auto phi =
-        fmod(funct(theta, h, (*pi)->phi0(), (*pi)->kT_KVm_inv()), TWO_M_PI);
-    (*pi)->phi0() = phi;
-    auto mom = e_h * cos(phi) + rot_axis * sin(phi);
-    auto const [quat, dipm] = convert_dip_to_quat((*p)->sat_mag() * mom);
-    (*p)->dipm() = dipm;
-    (*p)->quat() = quat;
+    on_dipoles_change();
+  } else {
+    auto p = local_virt_particles.begin();
+    for (auto pi = local_real_particles.begin();
+         pi != local_real_particles.end(); ++pi, ++p) {
+      auto phi = fmod(funct(0., 0., (*pi)->phi0(), (*pi)->kT_KVm_inv(),
+                            (*pi)->tau0_inv(), (*pi)->dt_incr()),
+                      TWO_M_PI);
+      Utils::Vector3d e_k = (*pi)->calc_director();
+      if (phi < M_PI_2) {
+        auto const [quat, dipm] = convert_dip_to_quat((*p)->sat_mag() * e_k);
+        (*p)->dipm() = dipm;
+        (*p)->quat() = quat;
+        (*pi)->phi0() = 0.;
+      } else {
+        auto const [quat, dipm] = convert_dip_to_quat((*p)->sat_mag() * -e_k);
+        (*p)->dipm() = dipm;
+        (*p)->quat() = quat;
+        (*pi)->phi0() = M_PI;
+      }
+    }
+    on_dipoles_change();
   }
-  on_dipoles_change();
 }
 
 DipolarDirectSum::DipolarDirectSum(double prefactor, int n_replicas)

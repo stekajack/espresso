@@ -171,6 +171,10 @@ struct ParticleProperties {
   double Hkinv = 0.;
   /** units parameter for the kinetic MC step */
   double kT_KVm_inv = 0.;
+  /** units parameter for the kinetic MC step */
+  double tau0_inv = 0.;
+  /** units parameter for the kinetic MC step */
+  double dt_incr = 0.;
 #endif
 
 #ifdef VIRTUAL_SITES_RELATIVE
@@ -259,6 +263,8 @@ struct ParticleProperties {
     ar &sat_mag;
     ar &Hkinv;
     ar &kT_KVm_inv;
+    ar &tau0_inv;
+    ar &dt_incr;
 #endif
 #ifdef VIRTUAL_SITES
     ar &is_virtual;
@@ -547,6 +553,10 @@ public:
   auto &Hkinv() { return p.Hkinv; }
   auto const &kT_KVm_inv() const { return p.kT_KVm_inv; }
   auto &kT_KVm_inv() { return p.kT_KVm_inv; }
+  auto const &tau0_inv() const { return p.tau0_inv; }
+  auto &tau0_inv() { return p.tau0_inv; };
+  auto const &dt_incr() const { return p.dt_incr; }
+  auto &dt_incr() { return p.dt_incr; }
 #endif
 #ifdef ROTATIONAL_INERTIA
   auto const &rinertia() const { return p.rinertia; }

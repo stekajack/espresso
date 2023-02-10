@@ -120,6 +120,8 @@ using UpdatePropertyMessage = boost::variant
         , UpdateProperty<double, &Prop::sat_mag>
         , UpdateProperty<double, &Prop::Hkinv>
         , UpdateProperty<double, &Prop::kT_KVm_inv>
+        , UpdateProperty<double, &Prop::tau0_inv>
+        , UpdateProperty<double, &Prop::dt_incr>
 #endif
 #ifdef VIRTUAL_SITES
         , UpdateProperty<bool, &Prop::is_virtual>
@@ -507,6 +509,14 @@ void set_particle_Hkinv(int part, double Hkinv) {
 void set_particle_kT_KVm_inv(int part, double kT_KVm_inv) {
   mpi_update_particle_property<double, &ParticleProperties::kT_KVm_inv>(
       part, kT_KVm_inv);
+}
+void set_particle_tau0_inv(int part, double tau0_inv) {
+  mpi_update_particle_property<double, &ParticleProperties::tau0_inv>(part,
+                                                                      tau0_inv);
+}
+void set_particle_dt_incr(int part, double dt_incr) {
+  mpi_update_particle_property<double, &ParticleProperties::dt_incr>(part,
+                                                                     dt_incr);
 }
 #endif
 #ifdef VIRTUAL_SITES

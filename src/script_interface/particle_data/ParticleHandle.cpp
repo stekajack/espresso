@@ -249,6 +249,16 @@ ParticleHandle::ParticleHandle() {
          set_particle_kT_KVm_inv(m_pid, get_value<double>(value));
        },
        [this]() { return particle().kT_KVm_inv(); }},
+      {"tau0_inv",
+       [this](Variant const &value) {
+         set_particle_tau0_inv(m_pid, get_value<double>(value));
+       },
+       [this]() { return particle().tau0_inv(); }},
+      {"dt_incr",
+       [this](Variant const &value) {
+         set_particle_dt_incr(m_pid, get_value<double>(value));
+       },
+       [this]() { return particle().dt_incr(); }},
 #endif
 #ifdef ROTATIONAL_INERTIA
       {"rinertia",

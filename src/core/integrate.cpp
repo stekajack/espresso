@@ -420,9 +420,9 @@ int integrate(int n_steps, int reuse_forces) {
     synchronize_npt_state();
   }
 #endif
-/*will calculate the value fo dipole field at every intergration whihc might
+/*will calculate the value of dipole field at every intergration which might
  * not be necessary! The idea is that the valu could be usefully for
- * polarisable objects, whihc would need to be updated at every
+ * polarisable objects, which would need to be updated at every
  * integration.*/
 #ifdef DIPSUS
   calc_long_range_fields(cell_structure);

@@ -50,7 +50,23 @@ struct DipolarDirectSum {
   double long_range_energy(ParticleRange const &particles) const;
   void add_long_range_forces(ParticleRange const &particles) const;
   void dipole_field_at_part(ParticleRange const &particles) const;
-  double funct(double theta, double h, double phi0, double kT_KVm_inv) const;
+  double funct(double theta, double h, double phi0, double kT_KVm_inv,
+               double tau0_inv, double dt) const;
+  /* Stoner-Wolfarth with kinetic MC step approach. For every integration
+   * step we reset the dipole moment of all magnetic paricles in the simulation
+   * box. Requires ESPRESSO_BUILD_WITH_NLOPT=ON and compiles in with #DIPSUS
+   * feature enabled In order for the procedure to work, various properties are
+   * required to be set on a per particle:
+   * &Prop::sw_real marks part carrying the director
+   * &Prop::sw_virt marks the particle carrying the magentic properties
+   * &Prop::phi0 stores last known phi value (imposes locality)
+   * &Prop::sat_mag store the saturation magnetisation value in REDUCED UNITS!
+   * &Prop::Hkinv B field scale [kg/ A s^2 (T)] divided by the anisotropy field
+   * &Prop::kT_KVm_inv in SI UNTIS!
+   * &Prop::tau0_inv the attempt frequency, taken as the temperature in SI units
+   * dependant Brown factor inverse
+   * &Prop::dt_incr real time passed in a timestep given in SI untis
+   */
   void stoner_wolfarth_main(ParticleRange const &particles) const;
 };
 
