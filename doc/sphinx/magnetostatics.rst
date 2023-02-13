@@ -154,9 +154,14 @@ system's list of active actors. The only required parameter is the prefactor
 
 The CPU implementation has an optional argument ``n_replicas`` which
 adds periodic copies to the system along periodic directions. In that
-case, the minimum image convention is no longer used.
+case, the minimum image convention is no longer used. Additionally, 
+enabling the DIPOLE_FIELDS_TRACKING feature in the myconfig.hpp file 
+enables the CPU implementation of the direct sum to calculate and store 
+the total dipole field at the position of each magnetic particle in 
+the primary simulation box. These values can be accessed through the 
+particle handle's ``dip_fld``  property.
 
-Both implementations support MPI-parallelization.
+Both implementations of the dipolar direct sum support MPI-parallelization.
 
 
 .. _Barnes-Hut octree sum on GPU:
