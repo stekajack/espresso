@@ -230,6 +230,15 @@ void force_calc(CellStructure &cell_structure, double time_step, double kT) {
   virtual_sites()->back_transfer_forces_and_torques();
 #endif
 
+#ifdef EGG_MODEL
+    for (auto &p : particles) {
+
+      if (p.is_virtual() and p.use_egg_model()) {
+        egg_model_calc_internal_magnetic_torque(p);
+      }
+    }
+#endif // EGG_MODEL
+
   // Communication Step: ghost forces
   cell_structure.ghosts_reduce_forces();
 

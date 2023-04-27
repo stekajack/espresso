@@ -31,6 +31,7 @@
 
 #include <utils/Vector.hpp>
 
+
 #include <cmath>
 
 /** Determine position: viscous drag driven by conservative forces.
@@ -384,5 +385,6 @@ bd_random_walk_vel_rot(BrownianThermostat const &brownian, Particle const &p) {
   return mask(p.rotation(), domega);
 }
 #endif // ROTATION
+
 
 #endif // THERMOSTATS_BROWNIAN_INLINE_HPP

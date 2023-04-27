@@ -178,6 +178,40 @@ struct ParticleProperties {
   } vs_relative;
 #endif // VIRTUAL_SITES_RELATIVE
 
+#ifdef EGG_MODEL
+  /** The following properties define, with respect to which real particle a
+   *  virtual site is placed and at what distance. The relative orientation of
+   *  the vector pointing from real particle to virtual site with respect to the
+   *  orientation of the real particle is stored in the virtual site's
+   *  quaternion attribute.
+   */
+  struct EggModelParameters {
+
+    bool use_egg_model = false;
+
+    double egg_gamma = 0;
+    double aniso_energy = 0;
+
+    Utils::Vector3d internal_magnetic_torque = {0.,0.,0.};
+
+    /** Orientation of the virtual particle easy axis in the body fixed frame. */
+    Utils::Quaternion<double> axis_quat_body_fixed = Utils::Quaternion<double>::identity();
+
+    /** Orientation of the virtual particle easy axis in the space fixed frame. */
+    Utils::Quaternion<double> axis_quat_space_fixed = Utils::Quaternion<double>::identity();
+    
+    template <class Archive> void serialize(Archive &ar, long int) {
+      ar &use_egg_model;
+      ar &egg_gamma;
+      ar &aniso_energy;
+      ar &internal_magnetic_torque;
+      ar &axis_quat_body_fixed;     
+      ar &axis_quat_space_fixed;     
+    }
+  } egg_model_params;
+
+#endif // EGG_MODEL
+
 #ifdef THERMOSTAT_PER_PARTICLE
 /** Friction coefficient for translation */
 #ifndef PARTICLE_ANISOTROPY
@@ -236,6 +270,10 @@ struct ParticleProperties {
     ar &is_virtual;
 #ifdef VIRTUAL_SITES_RELATIVE
     ar &vs_relative;
+#endif
+
+#ifdef EGG_MODEL
+    ar &egg_model_params;
 #endif
 #endif // VIRTUAL_SITES
 
@@ -526,6 +564,18 @@ public:
   auto const &vs_relative() const { return p.vs_relative; }
   auto &vs_relative() { return p.vs_relative; }
 #endif // VIRTUAL_SITES_RELATIVE
+#ifdef EGG_MODEL
+  auto use_egg_model() const { return p.egg_model_params.use_egg_model; }
+  auto calc_axis() const { return Utils::convert_quaternion_to_director(p.egg_model_params.axis_quat_space_fixed); }
+  auto const &egg_model_params() const { return p.egg_model_params; }
+  auto &egg_model_params() { return p.egg_model_params; }
+  auto const &internal_magnetic_torque() const { return p.egg_model_params.internal_magnetic_torque; }
+  auto &internal_magnetic_torque() { return p.egg_model_params.internal_magnetic_torque; }
+  auto const &aniso_energy() const { return p.egg_model_params.aniso_energy; }
+  auto &aniso_energy() { return p.egg_model_params.aniso_energy; }
+  auto const &egg_gamma() const { return p.egg_model_params.egg_gamma; }
+  auto &egg_gamma() { return p.egg_model_params.egg_gamma; }
+#endif // EGG_MODEL
 #else
   constexpr auto is_virtual() const { return p.is_virtual; }
 #endif
@@ -608,6 +658,10 @@ BOOST_CLASS_IMPLEMENTATION(ParticleRattle, object_serializable)
 BOOST_CLASS_IMPLEMENTATION(decltype(ParticleProperties::vs_relative),
                            object_serializable)
 #endif
+#ifdef EGG_MODEL
+BOOST_CLASS_IMPLEMENTATION(decltype(ParticleProperties::egg_model_params),
+                           object_serializable)
+#endif
 
 BOOST_IS_BITWISE_SERIALIZABLE(ParticleParametersSwimming)
 BOOST_IS_BITWISE_SERIALIZABLE(ParticleProperties)
@@ -620,6 +674,9 @@ BOOST_IS_BITWISE_SERIALIZABLE(ParticleRattle)
 #endif
 #ifdef VIRTUAL_SITES_RELATIVE
 BOOST_IS_BITWISE_SERIALIZABLE(decltype(ParticleProperties::vs_relative))
+#endif
+#ifdef EGG_MODEL
+BOOST_IS_BITWISE_SERIALIZABLE(decltype(ParticleProperties::egg_model_params))
 #endif
 
 #endif
