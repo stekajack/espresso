@@ -130,6 +130,10 @@ using UpdatePropertyMessage = boost::variant
         , UpdateProperty<ParticleProperties::VirtualSitesRelativeParameters,
                          &Prop::vs_relative>
 #endif
+#ifdef EGG_MODEL
+        , UpdateProperty<ParticleProperties::EggModelParameters,
+                         &Prop::egg_model_params>
+#endif
 #endif
 #ifdef THERMOSTAT_PER_PARTICLE
 #ifndef PARTICLE_ANISOTROPY

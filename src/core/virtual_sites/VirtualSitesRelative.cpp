@@ -134,8 +134,15 @@ void VirtualSitesRelative::update() const {
       p.v()[shear_dir] -= n_shifts[shear_normal] * le_vel;
     }
 
-    if (have_quaternions())
-      p.quat() = p_ref.quat() * p.vs_relative().quat;
+#ifdef EGG_MODEL
+    if (p.use_egg_model()) { 
+      egg_model_update_space_quats(p); 
+    } else 
+#endif // EGG_MODEL
+    {
+      if (have_quaternions()) 
+        p.quat() = p_ref.quat() * p.vs_relative().quat;
+    }
   }
 
   if (cell_structure.check_resort_required(particles, skin)) {
@@ -177,4 +184,6 @@ Utils::Matrix<double, 3, 3> VirtualSitesRelative::pressure_tensor() const {
 
   return pressure_tensor;
 }
+
+
 #endif // VIRTUAL_SITES_RELATIVE

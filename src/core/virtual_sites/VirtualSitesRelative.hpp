@@ -38,6 +38,7 @@ public:
   void back_transfer_forces_and_torques() const override;
   /** @copydoc VirtualSites::pressure_tensor */
   Utils::Matrix<double, 3, 3> pressure_tensor() const override;
+
 };
 
 #endif
