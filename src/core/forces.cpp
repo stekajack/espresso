@@ -53,6 +53,8 @@
 #include "thermostats/langevin_inline.hpp"
 #include "virtual_sites.hpp"
 
+#include "egg_model_inline.hpp"
+
 #include <boost/variant.hpp>
 
 #include <profiler/profiler.hpp>
@@ -232,7 +234,6 @@ void force_calc(CellStructure &cell_structure, double time_step, double kT) {
 
 #ifdef EGG_MODEL
     for (auto &p : particles) {
-
       if (p.is_virtual() and p.use_egg_model()) {
         egg_model_calc_internal_magnetic_torque(p);
       }

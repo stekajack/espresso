@@ -730,6 +730,76 @@ cdef class ParticleHandle:
             vs_relate_to(self._id, rel_to)
             handle_errors('vs_auto_relate_to')
 
+        IF EGG_MODEL:
+            property axis_quat_body:
+                """ Virtual site quaternion.
+
+                This quaternion describes the virtual particle axis orientation in the
+                body fixed frame of the related real particle.
+
+                axis_quat_body : (4,) array_like of :obj:`float`
+
+                .. note::
+                This needs the feature ``EGG_MODEL``.
+
+                """
+
+                def __set__(self, q):
+                    check_type_or_throw_except(
+                        q, 4, float, "axis_quat_body has to be an array-like of length 4")
+                    if np.linalg.norm(q) == 0.:
+                        raise ValueError("quaternion is zero")
+                    cdef Quaternion[double] _q
+                    for i in range(4):
+                        _q[i] = q[i]
+                    set_particle_axis_quat_body(self._id, _q)
+
+                def __get__(self):
+                    self.update_particle_data()
+                    cdef Quaternion[double] q
+                    q = get_particle_axis_quat_body(self.particle_data)
+                    return array_locked([q[0], q[1], q[2], q[3]])
+
+            property egg_mode_params:
+                """
+                Egg model  parameters.
+
+                egg_mode_params : tuple (use_egg_model_flag, egg_gamma, aniso_energy)
+
+                .. note::
+                This needs the feature ``EGG_MODEL``
+
+                """
+
+                def __set__(self, x):
+                    if len(x) != 3:
+                        raise ValueError(
+                            "egg_mode_params needs input in the form [use_egg_model_flag, egg_gamma, aniso_energy].")
+                    use_egg_model_flag, egg_gamma, aniso_energy = x
+                    check_type_or_throw_except(
+                        use_egg_model_flag, 1, int, "use_egg_model_flag has to be given as a bool.")
+                    check_type_or_throw_except(
+                        egg_gamma, 1, float, "egg_gamma has to be given as a float.")
+                    check_type_or_throw_except(
+                        aniso_energy, 1, float, "aniso_energy has to be given as a float.")
+  
+                    set_particle_egg_model_params(self._id, use_egg_model_flag, egg_gamma, aniso_energy)
+
+                def __get__(self):
+                    self.update_particle_data()
+                    cdef int use_egg_model_flag = 0
+                    cdef double egg_gamma = 1.
+                    cdef double aniso_energy = 0.
+                    get_particle_egg_model_params(self.particle_data, use_egg_model_flag, egg_gamma, aniso_energy)
+                    return (use_egg_model_flag, egg_gamma, aniso_energy)
+
+            def get_axis(self):
+                cdef Vector3d axis = get_particle_axis(self.particle_data)
+                return array_locked([axis[0],axis[1],axis[2]])
+
+
+    
+    
     IF DIPOLES:
         property dip:
             """

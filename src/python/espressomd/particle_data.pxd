@@ -134,6 +134,14 @@ cdef extern from "particle_data.hpp":
         void set_particle_vs_relative(int part, int vs_relative_to, double vs_distance, const Quaternion[double] & rel_ori)
         void set_particle_vs_quat(int part, const Quaternion[double] & vs_quat)
 
+        IF EGG_MODEL:
+            void set_particle_egg_model_params(int part, int use_egg_model, double egg_gamma, double aniso_energy)        
+            void set_particle_axis_quat_body(int part, const Quaternion[double] & axis_quat)
+
+            void get_particle_egg_model_params(const particle * p, int & use_egg_model, double & egg_gamma, double & aniso_energy)
+            Quaternion[double] get_particle_axis_quat_body(const particle * p)
+            Vector3d get_particle_axis(const particle * p)
+
     IF EXTERNAL_FORCES:
         IF ROTATION:
             void set_particle_ext_torque(int part, const Vector3d & torque)

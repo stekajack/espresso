@@ -189,7 +189,7 @@ struct ParticleProperties {
 
     bool use_egg_model = false;
 
-    double egg_gamma = 0;
+    double egg_gamma = 1;
     double aniso_energy = 0;
 
     Utils::Vector3d internal_magnetic_torque = {0.,0.,0.};
@@ -204,9 +204,9 @@ struct ParticleProperties {
       ar &use_egg_model;
       ar &egg_gamma;
       ar &aniso_energy;
-      ar &internal_magnetic_torque;
-      ar &axis_quat_body_fixed;     
-      ar &axis_quat_space_fixed;     
+      ar &axis_quat_body_fixed;  
+      ar &axis_quat_space_fixed;  
+      ar &internal_magnetic_torque;   
     }
   } egg_model_params;
 

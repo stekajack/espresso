@@ -21,6 +21,8 @@
 
 #ifdef VIRTUAL_SITES_RELATIVE
 
+#include "egg_model_inline.hpp"
+
 #include "Particle.hpp"
 #include "cells.hpp"
 #include "errorhandling.hpp"
@@ -142,15 +144,13 @@ void VirtualSitesRelative::update() const {
       p.v()[shear_dir] -= n_shifts[shear_normal] * le_vel;
     }
 
-#ifdef EGG_MODEL
-    if (p.use_egg_model()) { 
-      egg_model_update_space_quats(p); 
-    } else 
-#endif // EGG_MODEL
-    {
-      if (have_quaternions()) 
+      if (have_quaternions()) {
         p.quat() = p_ref.quat() * p.vs_relative().quat;
-    }
+#ifdef EGG_MODEL
+        if (p.use_egg_model()) { egg_model_update_axis(p_ref, p); } 
+#endif // EGG_MODEL
+      }
+
   }
 
   if (cell_structure.check_resort_required(particles, skin)) {

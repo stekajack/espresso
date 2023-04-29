@@ -15,9 +15,7 @@
 #include <cmath>
 
 // called from VirtualSitesRelative::update()
-inline void egg_model_update_space_quats(Particle &p) {
-
-      p.quat() = p_ref.quat() * p.vs_relative().quat;
+inline void egg_model_update_axis(Particle const &p_ref, Particle &p) {
       p.egg_model_params().axis_quat_space_fixed = p_ref.quat() * p.egg_model_params().axis_quat_body_fixed;
 }
 
@@ -28,7 +26,7 @@ inline void egg_model_calc_internal_magnetic_torque(Particle &p) {
         Utils::Vector3d vec_e = p.calc_director();
         Utils::Vector3d vec_n = p.calc_axis();
 
-        auto const torque = 2 * p.aniso_energy() * vector_product(vec_e,vec_n) * (vec_e * vec_n);
+        auto torque = 2 * p.aniso_energy() * vector_product(vec_e,vec_n) * (vec_e * vec_n);
 
         torque = convert_vector_space_to_body(p, torque);
 
@@ -44,12 +42,13 @@ inline void egg_model_bd_internal_rotation(BrownianThermostat const &brownian, P
   Utils::Vector3d dphi = {};
 
   auto const noise = Random::noise_gaussian<RNGSalt::BROWNIAN_ROT_INC>(brownian.rng_counter(), brownian.rng_seed(), p.id());
+  double gamma_inv = 1./p.egg_gamma();
 
   for (int j = 0; j < 3; j++) {
 
     // if (p.can_rotate_around(j)) {
 
-     dphi[j] = (p.torque()[j] + p.internal_magnetic_torque()[j]) * dt / p.egg_gamma() + noise[j] * sqrt(2 * dt * kT / p.egg_gamma());
+     dphi[j] = (p.torque()[j] + p.internal_magnetic_torque()[j]) * dt * gamma_inv + noise[j] * sqrt(2 * dt * kT * gamma_inv);
 
      // }
 

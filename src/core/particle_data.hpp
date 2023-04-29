@@ -184,6 +184,12 @@ void set_particle_vs_relative(int part, int vs_relative_to, double vs_distance,
                               Utils::Quaternion<double> const &rel_ori);
 #endif
 
+#ifdef EGG_MODEL
+void set_particle_egg_model_params(int part, bool use_egg_model, double egg_gamma, double aniso_energy);
+void set_particle_axis_quat_body(int part, Utils::Quaternion<double> const &axis_quat) ;
+
+#endif // EGG_MODEL
+
 #ifdef THERMOSTAT_PER_PARTICLE
 /** Call only on the head node: set particle frictional coefficient.
  *  @param part the particle.
@@ -304,6 +310,33 @@ inline Utils::Quaternion<double> get_particle_vs_relative(Particle const *p,
   return p->vs_relative().rel_orientation;
 }
 #endif
+
+#ifdef EGG_MODEL
+
+        // void get_particle_egg_model_params(const particle * p, bool & use_egg_model, double & egg_gamma, double & aniso_energy)
+        // Quaternion[double] get_particle_axis_quat_body(const particle * p)
+        // Vector3d get_particle_axis(const particle * p)
+
+inline Utils::Quaternion<double> get_particle_axis_quat_body(Particle const *p) {
+  return p->egg_model_params().axis_quat_body_fixed;
+}
+
+inline void get_particle_egg_model_params(Particle const *p,
+                                                          int &use_egg_model,
+                                                          double & egg_gamma,
+                                                          double & aniso_energy) {
+  use_egg_model = p->egg_model_params().use_egg_model;
+  egg_gamma = p->egg_model_params().egg_gamma;
+  aniso_energy = p->egg_model_params().aniso_energy;
+}
+
+inline Utils::Vector3d get_particle_axis(Particle const *p) {
+
+  return p->calc_axis();
+}
+
+
+#endif // EGG_MODEL
 
 #ifdef EXTERNAL_FORCES
 inline Utils::Vector3i get_particle_fix(Particle const *p) {
