@@ -24,6 +24,8 @@
 
 #include "config/config.hpp"
 
+#include "egg_model_inline.hpp"
+
 #include "ParticleRange.hpp"
 #include "integrate.hpp"
 #include "rotation.hpp"
@@ -52,9 +54,9 @@ inline void brownian_dynamics_propagator(BrownianThermostat const &brownian,
       p.omega() += bd_random_walk_vel_rot(brownian, p);
 
 #ifdef EGG_MODEL
-    if (p.is_virtual() and p.use_egg_model()) {
-      egg_model_bd_internal_rotation(p);
-    }
+      if (p.is_virtual() and p.use_egg_model()) {
+        egg_model_bd_internal_rotation(brownian, p, time_step, kT);
+      }
 #endif // EGG_MODEL
 
 #endif // ROTATION

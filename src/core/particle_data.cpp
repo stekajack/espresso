@@ -560,6 +560,62 @@ void set_particle_vs_relative(int part, int vs_relative_to, double vs_distance,
 }
 #endif
 
+#ifdef EGG_MODEL
+
+void set_particle_axis_quat_body(int part,
+                                 Utils::Quaternion<double> const &axis_quat) {
+  auto egg_model_params = get_particle_data(part).egg_model_params();
+
+  egg_model_params.axis_quat_body_fixed = axis_quat;
+
+  mpi_update_particle_property<ParticleProperties::EggModelParameters,
+                               &ParticleProperties::egg_model_params>(
+      part, egg_model_params);
+}
+
+void set_particle_egg_model_params(int part, bool use_egg_model,
+                                   double egg_gamma, double aniso_energy) {
+
+  auto egg_model_params = get_particle_data(part).egg_model_params();
+
+  egg_model_params.use_egg_model = use_egg_model;
+  egg_model_params.egg_gamma = egg_gamma;
+  egg_model_params.aniso_energy = aniso_energy;
+
+  mpi_update_particle_property<ParticleProperties::EggModelParameters,
+                               &ParticleProperties::egg_model_params>(
+      part, egg_model_params);
+}
+#endif // EGG_MODEL
+
+#ifdef EGG_MODEL
+
+void set_particle_axis_quat_body(int part,
+                                 Utils::Quaternion<double> const &axis_quat) {
+  auto egg_model_params = get_particle_data(part).egg_model_params();
+
+  egg_model_params.axis_quat_body_fixed = axis_quat;
+
+  mpi_update_particle_property<ParticleProperties::EggModelParameters,
+                               &ParticleProperties::egg_model_params>(
+      part, egg_model_params);
+}
+
+void set_particle_egg_model_params(int part, bool use_egg_model,
+                                   double egg_gamma, double aniso_energy) {
+
+  auto egg_model_params = get_particle_data(part).egg_model_params();
+
+  egg_model_params.use_egg_model = use_egg_model;
+  egg_model_params.egg_gamma = egg_gamma;
+  egg_model_params.aniso_energy = aniso_energy;
+
+  mpi_update_particle_property<ParticleProperties::EggModelParameters,
+                               &ParticleProperties::egg_model_params>(
+      part, egg_model_params);
+}
+#endif // EGG_MODEL
+
 #ifdef ELECTROSTATICS
 void set_particle_q(int part, double q) {
   mpi_update_particle_property<double, &ParticleProperties::q>(part, q);
