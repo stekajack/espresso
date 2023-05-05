@@ -494,7 +494,7 @@ double DipolarDirectSum::funct(double theta, double h, double phi0,
    * https://www.damtp.cam.ac.uk/user/na/NA_papers/NA2009_06.pdf
    */
 
-  opt.set_xtol_rel(1e-5);
+  opt.set_xtol_rel(1e-4);
   opt.set_lower_bounds(phi0 - M_PI);
   opt.set_upper_bounds(phi0 + M_PI);
   std::vector<double> x(1);
@@ -519,7 +519,7 @@ double DipolarDirectSum::funct(double theta, double h, double phi0,
   if (fabs(min1 - min2) > 1.e-7) {
     nlopt::opt opt(nlopt::LN_BOBYQA, 1);
     opt.set_min_objective(inv_phi_objective, &params);
-    opt.set_xtol_rel(1e-5);
+    opt.set_xtol_rel(1e-4);
     opt.set_lower_bounds(phi0 - M_PI);
     opt.set_upper_bounds(phi0 + M_PI);
     std::vector<double> x(1);
@@ -601,7 +601,7 @@ void DipolarDirectSum::stoner_wolfarth_main(
       // calc_director() result already normalised
       Utils::Vector3d e_k = (*pi)->calc_director();
       double theta = acos(e_h * e_k);
-      auto rot_axis = vector_product(e_h, e_k);
+      auto rot_axis = vector_product(vector_product(e_h, e_k), e_h);
       if (theta > M_PI_2) {
         theta = M_PI - theta;
         h = -h;
@@ -643,8 +643,8 @@ void DipolarDirectSum::stoner_wolfarth_main(
 
 DipolarDirectSum::DipolarDirectSum(double prefactor, int n_replicas)
     : prefactor{prefactor}, n_replicas{n_replicas} {
-  if (prefactor <= 0.) {
-    throw std::domain_error("Parameter 'prefactor' must be > 0");
+  if (prefactor < 0.) {
+    throw std::domain_error("Parameter 'prefactor' must be >= 0");
   }
   if (n_replicas < 0) {
     throw std::domain_error("Parameter 'n_replicas' must be >= 0");
