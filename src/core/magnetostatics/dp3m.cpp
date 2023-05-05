@@ -216,6 +216,9 @@ template <std::size_t cao> struct AssignTorques {
                         });
 
         p.torque() -= vector_product(p.calc_dip(), prefac * E);
+#ifdef DIPOLE_FIELD_TRACKING
+        p.dip_fld() = prefac * E;
+#endif
         ++p_index;
       }
     }

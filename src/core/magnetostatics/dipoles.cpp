@@ -199,8 +199,8 @@ struct LongRangeField : public boost::static_visitor<void> {
   template <typename T,
             std::enable_if_t<!traits::has_dipoles_field<T>::value> * = nullptr>
   void operator()(std::shared_ptr<T> const &) const {
-    runtimeWarningMsg() << "Dipoles field calculation not implemented by "
-                        << "dipolar method " << Utils::demangle<T>();
+    // runtimeWarningMsg() << "Dipoles field calculation not implemented by "
+    //                     << "dipolar method " << Utils::demangle<T>();
   }
 };
 #endif

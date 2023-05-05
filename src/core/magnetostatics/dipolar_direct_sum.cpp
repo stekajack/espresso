@@ -61,7 +61,7 @@ namespace {
  * @return Resulting force.
  */
 auto pair_force(Utils::Vector3d const &d, Utils::Vector3d const &m1,
-                Utils::Vector3d const &m2) {
+                Utils::Vector3d const &m2, Particle *p1) {
   auto const pe2 = m1 * d;
   auto const pe3 = m2 * d;
 
@@ -75,6 +75,7 @@ auto pair_force(Utils::Vector3d const &d, Utils::Vector3d const &m1,
 
   auto const f = (a + b) * d + 3.0 * (pe3 * m1 + pe2 * m2) / r5;
   auto const r3 = r2 * r;
+  p1->dip_fld() += 3.0 * pe2 * d / r5 - m1 / r3;
   auto const t =
       -vector_product(m1, m2) / r3 + 3.0 * pe3 * vector_product(m1, d) / r5;
 
@@ -303,12 +304,14 @@ void DipolarDirectSum::add_long_range_forces(
   auto p = local_particles.begin();
 
   /* IA with local particles */
+  Utils::Vector3d u_init = {0., 0., 0.};
   for (auto it = local_posmom_begin; it != local_posmom_end; ++it, ++p) {
     /* IA with own images */
+    (*p)->dip_fld() = u_init;
     auto fi = image_sum(
         it, std::next(it), it, with_replicas, ncut, box_l, ParticleForce{},
-        [it](Utils::Vector3d const &rn, Utils::Vector3d const &mj) {
-          return pair_force(rn, it->m, mj);
+        [it, p](Utils::Vector3d const &rn, Utils::Vector3d const &mj) {
+          return pair_force(rn, it->m, mj, *p);
         });
 
     /* IA with other local particles */
@@ -323,7 +326,7 @@ void DipolarDirectSum::add_long_range_forces(
       for_each_image(ncut, [&](int nx, int ny, int nz) {
         auto const rn =
             d + Utils::Vector3d{nx * box_l[0], ny * box_l[1], nz * box_l[2]};
-        auto const pf = pair_force(rn, it->m, jt->m);
+        auto const pf = pair_force(rn, it->m, jt->m, *q);
         fij += pf;
         fji.f -= pf.f;
         /* Conservation of angular momentum mandates that
@@ -349,19 +352,20 @@ void DipolarDirectSum::add_long_range_forces(
   /* Interaction with all the other particles */
   for (auto it = local_posmom_begin; it != local_posmom_end; ++it, ++p) {
     // red particles
-    auto fi =
-        image_sum(all_posmom.begin(), local_posmom_begin, it, with_replicas,
-                  ncut, box_l, ParticleForce{},
-                  [it](Utils::Vector3d const &rn, Utils::Vector3d const &mj) {
-                    return pair_force(rn, it->m, mj);
-                  });
+    auto fi = image_sum(
+        all_posmom.begin(), local_posmom_begin, it, with_replicas, ncut, box_l,
+        ParticleForce{},
+        [it, p](Utils::Vector3d const &rn, Utils::Vector3d const &mj) {
+          return pair_force(rn, it->m, mj, *p);
+        });
 
     // black particles
-    fi += image_sum(local_posmom_end, all_posmom.end(), it, with_replicas, ncut,
-                    box_l, ParticleForce{},
-                    [it](Utils::Vector3d const &rn, Utils::Vector3d const &mj) {
-                      return pair_force(rn, it->m, mj);
-                    });
+    fi += image_sum(
+        local_posmom_end, all_posmom.end(), it, with_replicas, ncut, box_l,
+        ParticleForce{},
+        [it, p](Utils::Vector3d const &rn, Utils::Vector3d const &mj) {
+          return pair_force(rn, it->m, mj, *p);
+        });
 
     (*p)->force() += prefactor * fi.f;
     (*p)->torque() += prefactor * fi.torque;
