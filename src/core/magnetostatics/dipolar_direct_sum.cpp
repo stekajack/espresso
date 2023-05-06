@@ -601,7 +601,8 @@ void DipolarDirectSum::stoner_wolfarth_main(
       // calc_director() result already normalised
       Utils::Vector3d e_k = (*pi)->calc_director();
       double theta = acos(e_h * e_k);
-      auto rot_axis = vector_product(vector_product(e_h, e_k), e_h);
+      auto rot_axis =
+          vector_product(vector_product(e_h, e_k), e_h).normalized();
       if (theta > M_PI_2) {
         theta = M_PI - theta;
         h = -h;
