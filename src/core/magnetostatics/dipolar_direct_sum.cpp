@@ -480,11 +480,12 @@ field  due to the normalisation)
 double DipolarDirectSum::funct(double theta, double h, double phi0,
                                double kT_KVm_inv, double tau0_inv,
                                double dt) const {
-  std::default_random_engine generator;
+  std::random_device rd;
+  std::default_random_engine generator(rd());
   std::uniform_real_distribution<double> distribution(0.0, 1.0);
   double eps_phi = 1e-3;
 
-  nlopt::opt opt(nlopt::LN_BOBYQA, 1);
+  nlopt::opt opt(nlopt::LD_LBFGS, 1);
   double params[] = {theta, h};
   opt.set_min_objective(phi_objective, &params);
 
@@ -494,21 +495,25 @@ double DipolarDirectSum::funct(double theta, double h, double phi0,
    * https://www.damtp.cam.ac.uk/user/na/NA_papers/NA2009_06.pdf
    */
 
-  opt.set_xtol_rel(1e-4);
+  opt.set_ftol_abs(1e-8);
   opt.set_lower_bounds(phi0 - M_PI);
   opt.set_upper_bounds(phi0 + M_PI);
   std::vector<double> x(1);
-  x[0] = phi0 + eps_phi;
-  double min1;
+  x[0] = phi0 + eps_phi; /* make initial guess from previos position plus
+                                   an arbitrary perturbation*/
+  double min1; /* this is the actuall value of the energy from minimiser */
   opt.optimize(x, min1);
-
-  x[0] = phi0 + eps_phi - M_PI;
+  double phi_min1 = x[0];
+  x[0] = phi0 + eps_phi -
+         M_PI; /*try to find another minimimum from the other side*/
   double min2;
   opt.optimize(x, min2);
-  if (min2 < -M_PI) {
-    min2 += TWO_M_PI;
-  } else if (min2 > M_PI) {
-    min2 -= TWO_M_PI;
+  double phi_min2 = x[0];
+
+  if (phi_min2 < -M_PI) {
+    phi_min2 += TWO_M_PI;
+  } else if (phi_min2 > M_PI) {
+    phi_min2 -= TWO_M_PI;
   }
   double sol;
 
@@ -516,37 +521,34 @@ double DipolarDirectSum::funct(double theta, double h, double phi0,
    * U_{SW} maxima to calculate the barried height for the jump probabilities.
    * Same logic as before, same issues */
 
-  if (fabs(min1 - min2) > 1.e-7) {
-    nlopt::opt opt(nlopt::LN_BOBYQA, 1);
+  if (fabs(phi_min1 - phi_min2) > 1.e-3) {
     opt.set_min_objective(inv_phi_objective, &params);
-    opt.set_xtol_rel(1e-4);
-    opt.set_lower_bounds(phi0 - M_PI);
-    opt.set_upper_bounds(phi0 + M_PI);
-    std::vector<double> x(1);
     x[0] = phi0 + eps_phi;
     double max1;
     opt.optimize(x, max1);
+    double phi_max1 = x[0];
 
     x[0] = phi0 + eps_phi - M_PI;
     double max2;
     opt.optimize(x, max2);
+    double phi_max2 = x[0];
 
-    if (max1 < -M_PI) {
-      max1 += TWO_M_PI;
-    } else if (max1 > M_PI) {
-      max1 -= TWO_M_PI;
+    if (phi_max1 < -M_PI) {
+      phi_max1 += TWO_M_PI;
+    } else if (phi_max1 > M_PI) {
+      phi_max1 -= TWO_M_PI;
     }
-    if (max2 < -M_PI) {
-      max2 += TWO_M_PI;
-    } else if (max2 > M_PI) {
-      max2 -= TWO_M_PI;
+    if (phi_max2 < -M_PI) {
+      phi_max2 += TWO_M_PI;
+    } else if (phi_max2 > M_PI) {
+      phi_max2 -= TWO_M_PI;
     }
 
-    double b1 = (phi_objective(1, &max1, nullptr, &params) -
-                 phi_objective(1, &min1, nullptr, &params)) *
+    double b1 = (phi_objective(1, &phi_max1, nullptr, &params) -
+                 phi_objective(1, &phi_min1, nullptr, &params)) *
                 kT_KVm_inv;
-    double b2 = (phi_objective(1, &max2, nullptr, &params) -
-                 phi_objective(1, &min1, nullptr, &params)) *
+    double b2 = (phi_objective(1, &phi_max2, nullptr, &params) -
+                 phi_objective(1, &phi_min2, nullptr, &params)) *
                 kT_KVm_inv;
     double tau1_inv = tau0_inv * exp(-b1);
     double tau2_inv = tau0_inv * exp(-b2);
@@ -554,12 +556,12 @@ double DipolarDirectSum::funct(double theta, double h, double phi0,
     //  a multiplicative factor p0 asumed to be 1!!!
     double p12 = 0.5 * (2. - exp(-dt * tau1_inv) - exp(-dt * tau2_inv));
     if (distribution(generator) < p12) {
-      sol = min2;
+      sol = phi_min2;
     } else {
-      sol = min1;
+      sol = phi_min1;
     }
   } else {
-    sol = min1;
+    sol = phi_min1;
   }
   return sol;
 }
@@ -619,6 +621,8 @@ void DipolarDirectSum::stoner_wolfarth_main(
     }
     on_dipoles_change();
   } else {
+    runtimeWarningMsg() << "we are in else";
+
     auto p = local_virt_particles.begin();
     for (auto pi = local_real_particles.begin();
          pi != local_real_particles.end(); ++pi, ++p) {

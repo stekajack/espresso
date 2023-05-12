@@ -147,7 +147,14 @@ public:
     return *this;
   }
 
-  Vector normalized() const { return (*this) / (*this).norm(); }
+  Vector normalized() const {
+    auto duzina = (*this).norm();
+    if (duzina != 0) {
+      return (*this) / (*this).norm();
+    } else {
+      return (*this);
+    }
+  }
 };
 
 template <class T> using Vector3 = Vector<T, 3>;
@@ -466,7 +473,9 @@ template <typename T, std::size_t N> struct decay_to_scalar<Vector<T, N>> {
   using type = Vector<T, N>;
 };
 
-template <typename T> struct decay_to_scalar<Vector<T, 1>> { using type = T; };
+template <typename T> struct decay_to_scalar<Vector<T, 1>> {
+  using type = T;
+};
 
 template <std::size_t I, class T, std::size_t N>
 struct tuple_element<I, Vector<T, N>> {
