@@ -21,9 +21,11 @@
 
 #include "core/analysis/statistics.hpp"
 #include "core/analysis/statistics_chain.hpp"
+#include "core/cells.hpp"
 #include "core/dpd.hpp"
 #include "core/energy.hpp"
 #include "core/grid.hpp"
+#include "core/magnetostatics/stoner_wolfarth_thermal.hpp"
 #include "core/nonbonded_interactions/nonbonded_interaction_data.hpp"
 #include "core/partCfg_global.hpp"
 #include "core/particle_node.hpp"
@@ -88,6 +90,11 @@ Variant Analysis::do_call_method(std::string const &name,
     fprintf(stderr, "Starting processes %d out of %d\n", rank, world);
     return {}; /* or return my_calculation(comm_cart); */
   }
+  if (name == "sw_hot") {
+    stoner_wolfarth_main(::cell_structure.local_particles());
+    return {};
+  }
+
   if (name == "linear_momentum") {
     auto const local = calc_linear_momentum(
         get_value_or<bool>(parameters, "include_particles", true),

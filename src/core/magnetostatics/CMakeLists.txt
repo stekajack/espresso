@@ -21,6 +21,7 @@ target_sources(
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/dipoles.cpp
           ${CMAKE_CURRENT_SOURCE_DIR}/barnes_hut_gpu.cpp
           ${CMAKE_CURRENT_SOURCE_DIR}/dipolar_direct_sum.cpp
+          ${CMAKE_CURRENT_SOURCE_DIR}/stoner_wolfarth_thermal.cpp
           ${CMAKE_CURRENT_SOURCE_DIR}/dipolar_direct_sum_gpu.cpp
           ${CMAKE_CURRENT_SOURCE_DIR}/dlc.cpp
           ${CMAKE_CURRENT_SOURCE_DIR}/dp3m.cpp

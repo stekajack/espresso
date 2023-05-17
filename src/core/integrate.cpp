@@ -420,14 +420,14 @@ int integrate(int n_steps, int reuse_forces) {
     synchronize_npt_state();
   }
 #endif
-/*will calculate the value of dipole field at every intergration which might
- * not be necessary! The idea is that the valu could be usefully for
- * polarisable objects, which would need to be updated at every
- * integration.*/
-#ifdef DIPSUS
-  calc_long_range_fields(cell_structure);
-  calc_stoner_wolfarth_dip(cell_structure);
-#endif // DIPOLES
+  /*will calculate the value of dipole field at every intergration which might
+   * not be necessary! The idea is that the valu could be usefully for
+   * polarisable objects, which would need to be updated at every
+   * integration.*/
+  // #ifdef DIPSUS
+  //   calc_long_range_fields(cell_structure);
+  //   calc_stoner_wolfarth_dip(cell_structure);
+  // #endif // DIPOLES
   return integrated_steps;
 }
 
