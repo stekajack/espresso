@@ -105,9 +105,12 @@ double funct(double theta, double h, double phi0, double kT_KVm_inv,
    * https://www.damtp.cam.ac.uk/user/na/NA_papers/NA2009_06.pdf
    */
 
-  opt.set_ftol_abs(1e-8);
-  opt.set_lower_bounds(phi0 - M_PI);
-  opt.set_upper_bounds(phi0 + M_PI);
+  opt.set_ftol_rel(
+      1e-15); // Set the relative tolerance for the objective function value
+  opt.set_ftol_abs(
+      1e-15); // Set the relative tolerance for the objective function value
+  // opt.set_lower_bounds(phi0 - M_PI);
+  // opt.set_upper_bounds(phi0 + M_PI);
   std::vector<double> x(1);
   x[0] = phi0 + eps_phi; /* make initial guess from previos position plus
                                    an arbitrary perturbation*/
@@ -131,14 +134,14 @@ double funct(double theta, double h, double phi0, double kT_KVm_inv,
    * U_{SW} maxima to calculate the barried height for the jump probabilities.
    * Same logic as before, same issues */
 
-  if (fabs(phi_min1 - phi_min2) > 1.e-3) {
+  if (fabs(phi_min1 - phi_min2) > 1.e-7) {
     opt.set_min_objective(inv_phi_objective, &params);
     x[0] = phi0 + eps_phi;
     double max1;
     opt.optimize(x, max1);
     double phi_max1 = x[0];
 
-    x[0] = phi0 + eps_phi - M_PI;
+    x[0] = phi_max1 - M_PI;
     double max2;
     opt.optimize(x, max2);
     double phi_max2 = x[0];
@@ -153,18 +156,19 @@ double funct(double theta, double h, double phi0, double kT_KVm_inv,
     } else if (phi_max2 > M_PI) {
       phi_max2 -= TWO_M_PI;
     }
+    runtimeWarningMsg() << "internal maxima " << phi_max1 << "  " << phi_max2;
 
-    double b1 = (phi_objective(1, &phi_max1, nullptr, &params) -
-                 phi_objective(1, &phi_min1, nullptr, &params)) *
-                kT_KVm_inv;
-    double b2 = (phi_objective(1, &phi_max2, nullptr, &params) -
-                 phi_objective(1, &phi_min2, nullptr, &params)) *
-                kT_KVm_inv;
+    double b1 = abs(max1 - min1) * kT_KVm_inv;
+    double b2 = abs(max2 - min2) * kT_KVm_inv;
+
     double tau1_inv = tau0_inv * exp(-b1);
     double tau2_inv = tau0_inv * exp(-b2);
 
     //  a multiplicative factor p0 asumed to be 1!!!
     double p12 = 0.5 * (2. - exp(-dt * tau1_inv) - exp(-dt * tau2_inv));
+    runtimeWarningMsg() << "internal barriers " << b1 << "  " << b2;
+    runtimeWarningMsg() << "internal probaBILITY FLIP " << p12;
+
     if (distribution(generator) < p12) {
       sol = phi_min2;
     } else {
