@@ -57,6 +57,7 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+
 namespace {
 double phi_objective(unsigned n, const double *x, double *grad,
                      void *my_func_data) {
@@ -65,9 +66,9 @@ double phi_objective(unsigned n, const double *x, double *grad,
   double theta = params[0];
   double h = params[1];
   if (grad) {
-    grad[0] = 0.5 * sin(2 * (phi - theta)) + h * sin(phi);
+    grad[0] = 0.5 * std::sin(2 * (phi - theta)) + h * std::sin(phi);
   }
-  return 0.25 - 0.25 * cos(2 * (phi - theta)) - h * cos(phi);
+  return -0.25 - 0.25 * std::cos(2 * (phi - theta)) - h * std::cos(phi);
 }
 
 double inv_phi_objective(unsigned n, const double *x, double *grad,
@@ -85,8 +86,6 @@ double inv_phi_objective(unsigned n, const double *x, double *grad,
 SW energy minimisation step with kinetic MC step. SW energy normalised by the
 anisotropy field H_k (Hkinv stored on part to avoid division, h is the reduced
 field  due to the normalisation)
-
-
 */
 double funct(double theta, double h, double phi0, double kT_KVm_inv,
              double tau0_inv, double dt) {
@@ -97,77 +96,60 @@ double funct(double theta, double h, double phi0, double kT_KVm_inv,
 
   nlopt::opt opt(nlopt::LD_LBFGS, 1);
   double params[] = {theta, h};
+
   opt.set_min_objective(phi_objective, &params);
-
-  /* relative tolerance should in principle be order k_bT. Minimise U_{SW} from
-   * both sides. Possible one global minimum of two local minima. Using
-   * constrained optimisation by quadratic approximations. See
-   * https://www.damtp.cam.ac.uk/user/na/NA_papers/NA2009_06.pdf
-   */
-
+  // opt.set_lower_bounds(0);
+  // opt.set_upper_bounds(TWO_M_PI);
   opt.set_ftol_rel(
       1e-15); // Set the relative tolerance for the objective function value
   opt.set_ftol_abs(
       1e-15); // Set the relative tolerance for the objective function value
-  // opt.set_lower_bounds(phi0 - M_PI);
-  // opt.set_upper_bounds(phi0 + M_PI);
   std::vector<double> x(1);
+
   x[0] = phi0 + eps_phi; /* make initial guess from previos position plus
                                    an arbitrary perturbation*/
   double min1; /* this is the actuall value of the energy from minimiser */
   opt.optimize(x, min1);
-  double phi_min1 = x[0];
-  x[0] = phi0 + eps_phi -
-         M_PI; /*try to find another minimimum from the other side*/
+  double phi_min1 = fmod(x[0], TWO_M_PI);
+
+  x[0] = fmod(phi_min1 + M_PI + eps_phi, 2 * M_PI);
+  /*try to find another minimimum from the other side*/
   double min2;
   opt.optimize(x, min2);
-  double phi_min2 = x[0];
 
-  if (phi_min2 < -M_PI) {
-    phi_min2 += TWO_M_PI;
-  } else if (phi_min2 > M_PI) {
-    phi_min2 -= TWO_M_PI;
-  }
+  double phi_min2 = fmod(x[0], TWO_M_PI);
   double sol;
-  runtimeWarningMsg() << "internal minima " << phi_min1 << "  " << phi_min2;
+  // runtimeWarningMsg() << "internal minima " << phi_min1 << "  " << phi_min2;
+  // runtimeWarningMsg() << "internal minima energies " << min1 << "  " << min2;
+
   /* If there more that one minimum in the U_{SW} run kinetic MC step. Find
    * U_{SW} maxima to calculate the barried height for the jump probabilities.
    * Same logic as before, same issues */
 
-  if (fabs(phi_min1 - phi_min2) > 1.e-7) {
-    opt.set_min_objective(inv_phi_objective, &params);
+  if (fabs(phi_min1 - phi_min2) > 1.e-3) {
+    opt.set_max_objective(phi_objective, &params);
     x[0] = phi0 + eps_phi;
+
     double max1;
     opt.optimize(x, max1);
-    double phi_max1 = x[0];
-
-    x[0] = phi_max1 - M_PI;
+    double phi_max1 = fmod(x[0], TWO_M_PI);
+    x[0] = fmod(phi_max1 + M_PI, 2 * M_PI);
     double max2;
     opt.optimize(x, max2);
-    double phi_max2 = x[0];
-
-    if (phi_max1 < -M_PI) {
-      phi_max1 += TWO_M_PI;
-    } else if (phi_max1 > M_PI) {
-      phi_max1 -= TWO_M_PI;
-    }
-    if (phi_max2 < -M_PI) {
-      phi_max2 += TWO_M_PI;
-    } else if (phi_max2 > M_PI) {
-      phi_max2 -= TWO_M_PI;
-    }
-    runtimeWarningMsg() << "internal maxima " << phi_max1 << "  " << phi_max2;
+    double phi_max2 = fmod(x[0], TWO_M_PI);
+    // runtimeWarningMsg() << "internal maxima " << phi_max1 << "  " <<
+    // phi_max2; runtimeWarningMsg() << "internal maxima energies " << max1 << "
+    // " << max2;
 
     double b1 = abs(max1 - min1) * kT_KVm_inv;
-    double b2 = abs(max2 - min2) * kT_KVm_inv;
+    double b2 = abs(max2 - min1) * kT_KVm_inv;
 
     double tau1_inv = tau0_inv * exp(-b1);
     double tau2_inv = tau0_inv * exp(-b2);
 
     //  a multiplicative factor p0 asumed to be 1!!!
     double p12 = 0.5 * (2. - exp(-dt * tau1_inv) - exp(-dt * tau2_inv));
-    runtimeWarningMsg() << "internal barriers " << b1 << "  " << b2;
-    runtimeWarningMsg() << "internal probaBILITY FLIP " << p12;
+    // runtimeWarningMsg() << "internal probability flip " << p12;
 
     if (distribution(generator) < p12) {
       sol = phi_min2;
@@ -177,7 +159,7 @@ double funct(double theta, double h, double phi0, double kT_KVm_inv,
   } else {
     sol = phi_min1;
   }
-  return sol;
+  return fmod(sol + TWO_M_PI, TWO_M_PI);
 }
 
 } // namespace
@@ -217,24 +199,23 @@ void stoner_wolfarth_main(ParticleRange const &particles) {
       auto e_h = ext_fld.normalized();
       // calc_director() result already normalised
       Utils::Vector3d e_k = (*pi)->calc_director();
-      double theta = acos(e_h * e_k);
-      auto rot_axis =
-          vector_product(vector_product(e_h, e_k), e_h).normalized();
+      double theta = std::acos(e_h * e_k);
       if (theta > M_PI_2) {
         theta = M_PI - theta;
         h = -h;
         e_h = -e_h;
       }
-      auto phi = fmod(funct(theta, h, (*pi)->phi0(), (*pi)->kT_KVm_inv(),
-                            (*pi)->tau0_inv(), (*pi)->dt_incr()),
-                      TWO_M_PI);
+      auto rot_axis =
+          vector_product(vector_product(e_h, e_k), e_h).normalized();
+      auto phi = funct(theta, h, (*pi)->phi0(), (*pi)->kT_KVm_inv(),
+                       (*pi)->tau0_inv(), (*pi)->dt_incr());
       (*pi)->phi0() = phi;
-      auto mom = e_h * cos(phi) + rot_axis * sin(phi);
-      auto const [quat, dipm] = convert_dip_to_quat((*p)->sat_mag() * mom);
+      auto mom = e_h * std::cos(phi) + rot_axis * std::sin(phi);
+      auto const [quat, dipm] = convert_dip_to_quat(mom * (*p)->sat_mag());
       (*p)->dipm() = dipm;
       (*p)->quat() = quat;
     }
-    // on_dipoles_change();
+    on_dipoles_change();
   } else {
     runtimeWarningMsg() << "we are in else";
 
@@ -257,7 +238,7 @@ void stoner_wolfarth_main(ParticleRange const &particles) {
         (*pi)->phi0() = M_PI;
       }
     }
-    // on_dipoles_change();
+    on_dipoles_change();
   }
 }
 #endif
