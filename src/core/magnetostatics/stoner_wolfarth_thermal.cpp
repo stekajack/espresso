@@ -71,17 +71,6 @@ double phi_objective(unsigned n, const double *x, double *grad,
   return -0.25 - 0.25 * std::cos(2 * (phi - theta)) - h * std::cos(phi);
 }
 
-double inv_phi_objective(unsigned n, const double *x, double *grad,
-                         void *my_func_data) {
-  double phi = x[0];
-  double *params = (double *)my_func_data;
-  double theta = params[0];
-  double h = params[1];
-  if (grad) {
-    grad[0] = -0.5 * sin(2 * (phi - theta)) - h * sin(phi);
-  }
-  return -0.25 + 0.25 * cos(2 * (phi - theta)) + h * cos(phi);
-}
 /*
 SW energy minimisation step with kinetic MC step. SW energy normalised by the
 anisotropy field H_k (Hkinv stored on part to avoid division, h is the reduced
@@ -94,12 +83,10 @@ double funct(double theta, double h, double phi0, double kT_KVm_inv,
   std::uniform_real_distribution<double> distribution(0.0, 1.0);
   double eps_phi = 1e-3;
 
-  nlopt::opt opt(nlopt::LD_LBFGS, 1);
+  nlopt::opt opt(nlopt::LD_MMA, 1);
   double params[] = {theta, h};
 
   opt.set_min_objective(phi_objective, &params);
-  // opt.set_lower_bounds(0);
-  // opt.set_upper_bounds(TWO_M_PI);
   opt.set_ftol_rel(
       1e-15); // Set the relative tolerance for the objective function value
   opt.set_ftol_abs(
@@ -119,8 +106,6 @@ double funct(double theta, double h, double phi0, double kT_KVm_inv,
 
   double phi_min2 = fmod(x[0], TWO_M_PI);
   double sol;
-  // runtimeWarningMsg() << "internal minima " << phi_min1 << "  " << phi_min2;
-  // runtimeWarningMsg() << "internal minima energies " << min1 << "  " << min2;
 
   /* If there more that one minimum in the U_{SW} run kinetic MC step. Find
    * U_{SW} maxima to calculate the barried height for the jump probabilities.
@@ -136,10 +121,6 @@ double funct(double theta, double h, double phi0, double kT_KVm_inv,
     x[0] = fmod(phi_max1 + M_PI, 2 * M_PI);
     double max2;
     opt.optimize(x, max2);
-    double phi_max2 = fmod(x[0], TWO_M_PI);
-    // runtimeWarningMsg() << "internal maxima " << phi_max1 << "  " <<
-    // phi_max2; runtimeWarningMsg() << "internal maxima energies " << max1 << "
-    // " << max2;
 
     double b1 = abs(max1 - min1) * kT_KVm_inv;
     double b2 = abs(max2 - min1) * kT_KVm_inv;
@@ -149,7 +130,6 @@ double funct(double theta, double h, double phi0, double kT_KVm_inv,
 
     //  a multiplicative factor p0 asumed to be 1!!!
     double p12 = 0.5 * (2. - exp(-dt * tau1_inv) - exp(-dt * tau2_inv));
-    // runtimeWarningMsg() << "internal probability flip " << p12;
 
     if (distribution(generator) < p12) {
       sol = phi_min2;
@@ -202,7 +182,6 @@ void stoner_wolfarth_main(ParticleRange const &particles) {
       double theta = std::acos(e_h * e_k);
       if (theta > M_PI_2) {
         theta = M_PI - theta;
-        h = -h;
         e_h = -e_h;
       }
       auto rot_axis =
@@ -217,7 +196,6 @@ void stoner_wolfarth_main(ParticleRange const &particles) {
     }
     on_dipoles_change();
   } else {
-    runtimeWarningMsg() << "we are in else";
 
     auto p = local_virt_particles.begin();
     for (auto pi = local_real_particles.begin();
