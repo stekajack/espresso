@@ -182,6 +182,7 @@ void stoner_wolfarth_main(ParticleRange const &particles) {
       double theta = std::acos(e_h * e_k);
       if (theta > M_PI_2) {
         theta = M_PI - theta;
+        h = -h;
         e_h = -e_h;
       }
       auto rot_axis =
