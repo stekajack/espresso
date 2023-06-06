@@ -66,9 +66,9 @@ double phi_objective(unsigned n, const double *x, double *grad,
   double theta = params[0];
   double h = params[1];
   if (grad) {
-    grad[0] = 0.5 * std::sin(2 * (phi - theta)) + h * std::sin(phi);
+    grad[0] = std::sin(2 * (phi - theta)) + 2 * h * std::sin(phi);
   }
-  return -0.25 - 0.25 * std::cos(2 * (phi - theta)) - h * std::cos(phi);
+  return -0.5 - 0.5 * std::cos(2 * (phi - theta)) - 2 * h * std::cos(phi);
 }
 
 /*
@@ -82,15 +82,17 @@ double funct(double theta, double h, double phi0, double kT_KVm_inv,
   std::default_random_engine generator(rd());
   std::uniform_real_distribution<double> distribution(0.0, 1.0);
   double eps_phi = 1e-3;
-
+  double h_crit = std::pow(std::pow(std::sin(theta), 2.0 / 3) +
+                               std::pow(std::cos(theta), 2.0 / 3),
+                           -3.0 / 2);
   nlopt::opt opt(nlopt::LD_MMA, 1);
   double params[] = {theta, h};
 
   opt.set_min_objective(phi_objective, &params);
   opt.set_ftol_rel(
-      1e-15); // Set the relative tolerance for the objective function value
+      1e-08); // Set the relative tolerance for the objective function value
   opt.set_ftol_abs(
-      1e-15); // Set the relative tolerance for the objective function value
+      1e-08); // Set the relative tolerance for the objective function value
   std::vector<double> x(1);
 
   x[0] = phi0 + eps_phi; /* make initial guess from previos position plus
@@ -98,23 +100,10 @@ double funct(double theta, double h, double phi0, double kT_KVm_inv,
   double min1; /* this is the actuall value of the energy from minimiser */
   opt.optimize(x, min1);
   double phi_min1 = fmod(x[0], TWO_M_PI);
-
-  x[0] = fmod(phi_min1 + M_PI + eps_phi, 2 * M_PI);
-  /*try to find another minimimum from the other side*/
-  double min2;
-  opt.optimize(x, min2);
-
-  double phi_min2 = fmod(x[0], TWO_M_PI);
-  double sol;
-
-  /* If there more that one minimum in the U_{SW} run kinetic MC step. Find
-   * U_{SW} maxima to calculate the barried height for the jump probabilities.
-   * Same logic as before, same issues */
-
-  if (fabs(phi_min1 - phi_min2) > 1.e-3) {
+  double sol = phi_min1;
+  if (h < h_crit) {
     opt.set_max_objective(phi_objective, &params);
     x[0] = phi0 + eps_phi;
-
     double max1;
     opt.optimize(x, max1);
     double phi_max1 = fmod(x[0], TWO_M_PI);
@@ -122,22 +111,22 @@ double funct(double theta, double h, double phi0, double kT_KVm_inv,
     double max2;
     opt.optimize(x, max2);
 
-    double b1 = abs(max1 - min1) * kT_KVm_inv;
-    double b2 = abs(max2 - min1) * kT_KVm_inv;
+    double b1 = std::abs(max1 - min1) * kT_KVm_inv;
+    double b2 = std::abs(max2 - min1) * kT_KVm_inv;
+    double b_min = (b1 < b2) ? b1 : b2;
+    double tau_inv = tau0_inv * exp(-b_min);
 
-    double tau1_inv = tau0_inv * exp(-b1);
-    double tau2_inv = tau0_inv * exp(-b2);
-
-    //  a multiplicative factor p0 asumed to be 1!!!
-    double p12 = 0.5 * (2. - exp(-dt * tau1_inv) - exp(-dt * tau2_inv));
-
+    double p12 = 1. - exp(-dt * tau_inv);
     if (distribution(generator) < p12) {
+      opt.set_min_objective(phi_objective, &params);
+      x[0] = fmod(phi_min1 + M_PI + eps_phi, 2 * M_PI);
+      /*try to find another minimimum from the other side*/
+      double min2;
+      opt.optimize(x, min2);
+
+      double phi_min2 = fmod(x[0], TWO_M_PI);
       sol = phi_min2;
-    } else {
-      sol = phi_min1;
     }
-  } else {
-    sol = phi_min1;
   }
   return fmod(sol + TWO_M_PI, TWO_M_PI);
 }
@@ -197,24 +186,25 @@ void stoner_wolfarth_main(ParticleRange const &particles) {
     }
     on_dipoles_change();
   } else {
-
+    std::random_device rd;
+    std::default_random_engine generator(rd());
+    std::uniform_real_distribution<double> distribution(0.0, 1.0);
     auto p = local_virt_particles.begin();
     for (auto pi = local_real_particles.begin();
          pi != local_real_particles.end(); ++pi, ++p) {
-      auto phi = fmod(funct(0., 0., (*pi)->phi0(), (*pi)->kT_KVm_inv(),
-                            (*pi)->tau0_inv(), (*pi)->dt_incr()),
-                      TWO_M_PI);
       Utils::Vector3d e_k = (*pi)->calc_director();
-      if (phi < M_PI_2) {
-        auto const [quat, dipm] = convert_dip_to_quat((*p)->sat_mag() * e_k);
-        (*p)->dipm() = dipm;
-        (*p)->quat() = quat;
-        (*pi)->phi0() = 0.;
-      } else {
+      (*pi)->phi0() = 0.;
+
+      double tau_inv = (*pi)->tau0_inv() * exp(-(*pi)->kT_KVm_inv());
+      double p12 = 1. - exp(-(*pi)->dt_incr() * tau_inv);
+      if (distribution(generator) < p12) {
         auto const [quat, dipm] = convert_dip_to_quat((*p)->sat_mag() * -e_k);
         (*p)->dipm() = dipm;
         (*p)->quat() = quat;
-        (*pi)->phi0() = M_PI;
+      } else {
+        auto const [quat, dipm] = convert_dip_to_quat((*p)->sat_mag() * e_k);
+        (*p)->dipm() = dipm;
+        (*p)->quat() = quat;
       }
     }
     on_dipoles_change();
