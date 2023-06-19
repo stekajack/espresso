@@ -114,7 +114,14 @@ double funct(double theta, double h, double phi0, double kT_KVm_inv,
     double b1 = std::abs(max1 - min1) * kT_KVm_inv;
     double b2 = std::abs(max2 - min1) * kT_KVm_inv;
     double b_min = (b1 < b2) ? b1 : b2;
-    double tau_inv = tau0_inv * exp(-b_min);
+    // double tau_inv = tau0_inv * exp(-b_min);
+    double alpha_inv = (2 * b_min * tau0_inv *
+                        (std::sqrt(b_min / M_PI) +
+                         std::pow(2, -b_min - 1) * (1 + 1 / b_min))) /
+                       ((1 + 1 / b_min));
+    double tau_inv = alpha_inv * 1 / (exp(b_min) - 1);
+    // runtimeWarningMsg() << "probability new and old: "
+    //                     << 1. - exp(-dt * tau_inv) << " " << dt * tau_inv;
 
     double p12 = 1. - exp(-dt * tau_inv);
     if (distribution(generator) < p12) {
