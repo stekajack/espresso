@@ -114,12 +114,11 @@ double funct(double theta, double h, double phi0, double kT_KVm_inv,
     double b1 = std::abs(max1 - min1) * kT_KVm_inv;
     double b2 = std::abs(max2 - min1) * kT_KVm_inv;
     double b_min = (b1 < b2) ? b1 : b2;
-    // double tau_inv = tau0_inv * exp(-b_min);
-    double alpha_inv = (2 * b_min * tau0_inv *
-                        (std::sqrt(b_min / M_PI) +
-                         std::pow(2, -b_min - 1) * (1 + 1 / b_min))) /
-                       ((1 + 1 / b_min));
-    double tau_inv = alpha_inv * 1 / (exp(b_min) - 1);
+    double tau_inv = tau0_inv * exp(-b_min);
+    // double alpha_inv = 2 * b_min * tau0_inv *
+    //                    ((1 / (1 + 1 / b_min)) * std::sqrt(b_min / M_PI) +
+    //                     std::pow(2, -b_min - 1));
+    // double tau_inv = alpha_inv * 1 / (exp(b_min) - 1);
     // runtimeWarningMsg() << "probability new and old: "
     //                     << 1. - exp(-dt * tau_inv) << " " << dt * tau_inv;
 
@@ -200,18 +199,32 @@ void stoner_wolfarth_main(ParticleRange const &particles) {
     for (auto pi = local_real_particles.begin();
          pi != local_real_particles.end(); ++pi, ++p) {
       Utils::Vector3d e_k = (*pi)->calc_director();
-      (*pi)->phi0() = 0.;
 
       double tau_inv = (*pi)->tau0_inv() * exp(-(*pi)->kT_KVm_inv());
       double p12 = 1. - exp(-(*pi)->dt_incr() * tau_inv);
       if (distribution(generator) < p12) {
-        auto const [quat, dipm] = convert_dip_to_quat((*p)->sat_mag() * -e_k);
-        (*p)->dipm() = dipm;
-        (*p)->quat() = quat;
+        if ((*pi)->phi0() == 0) {
+          auto const [quat, dipm] = convert_dip_to_quat((*p)->sat_mag() * -e_k);
+          (*pi)->phi0() = M_PI;
+          (*p)->dipm() = dipm;
+          (*p)->quat() = quat;
+
+        } else {
+          auto const [quat, dipm] = convert_dip_to_quat((*p)->sat_mag() * e_k);
+          (*pi)->phi0() = 0;
+          (*p)->dipm() = dipm;
+          (*p)->quat() = quat;
+        }
       } else {
-        auto const [quat, dipm] = convert_dip_to_quat((*p)->sat_mag() * e_k);
-        (*p)->dipm() = dipm;
-        (*p)->quat() = quat;
+        if ((*pi)->phi0() == 0) {
+          auto const [quat, dipm] = convert_dip_to_quat((*p)->sat_mag() * e_k);
+          (*p)->dipm() = dipm;
+          (*p)->quat() = quat;
+        } else {
+          auto const [quat, dipm] = convert_dip_to_quat((*p)->sat_mag() * -e_k);
+          (*p)->dipm() = dipm;
+          (*p)->quat() = quat;
+        }
       }
     }
     on_dipoles_change();
