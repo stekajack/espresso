@@ -77,9 +77,8 @@ anisotropy field H_k (Hkinv stored on part to avoid division, h is the reduced
 field  due to the normalisation)
 */
 double funct(double theta, double h, double phi0, double kT_KVm_inv,
-             double tau0_inv, double dt) {
-  std::random_device rd;
-  std::default_random_engine generator(rd());
+             double tau0_inv, double dt, std::mt19937 &rng_generator) {
+
   std::uniform_real_distribution<double> distribution(0.0, 1.0);
   double eps_phi = 1e-3;
   double h_crit = std::pow(std::pow(std::sin(theta), 2.0 / 3) +
@@ -90,9 +89,9 @@ double funct(double theta, double h, double phi0, double kT_KVm_inv,
 
   opt.set_min_objective(phi_objective, &params);
   opt.set_ftol_rel(
-      1e-08); // Set the relative tolerance for the objective function value
+      1e-15); // Set the relative tolerance for the objective function value
   opt.set_ftol_abs(
-      1e-08); // Set the relative tolerance for the objective function value
+      1e-15); // Set the relative tolerance for the objective function value
   std::vector<double> x(1);
 
   x[0] = phi0 + eps_phi; /* make initial guess from previos position plus
@@ -114,16 +113,17 @@ double funct(double theta, double h, double phi0, double kT_KVm_inv,
     double b1 = std::abs(max1 - min1) * kT_KVm_inv;
     double b2 = std::abs(max2 - min1) * kT_KVm_inv;
     double b_min = (b1 < b2) ? b1 : b2;
-    double tau_inv = tau0_inv * exp(-b_min);
-    // double alpha_inv = 2 * b_min * tau0_inv *
-    //                    ((1 / (1 + 1 / b_min)) * std::sqrt(b_min / M_PI) +
-    //                     std::pow(2, -b_min - 1));
-    // double tau_inv = alpha_inv * 1 / (exp(b_min) - 1);
-    // runtimeWarningMsg() << "probability new and old: "
-    //                     << 1. - exp(-dt * tau_inv) << " " << dt * tau_inv;
-
+    // double tau_inv = tau0_inv * exp(-b_min);
+    // double tau_inv = tau0_inv * (std::sqrt(1 - h) * (1 - h * h)) /
+    //                  std::cos(std::asin(h)) * exp(-b_min * (1 - h) * (1 -
+    //                  h));
+    double alpha_inv = b_min * tau0_inv *
+                       ((1 / (1 + 1 / b_min)) * std::sqrt(b_min / M_PI) +
+                        std::pow(2, -b_min - 1));
+    double tau_inv = alpha_inv * 1 / (exp(b_min) - 1);
     double p12 = 1. - exp(-dt * tau_inv);
-    if (distribution(generator) < p12) {
+
+    if (distribution(rng_generator) < p12) {
       opt.set_min_objective(phi_objective, &params);
       x[0] = fmod(phi_min1 + M_PI + eps_phi, 2 * M_PI);
       /*try to find another minimimum from the other side*/
@@ -139,7 +139,8 @@ double funct(double theta, double h, double phi0, double kT_KVm_inv,
 
 } // namespace
 
-void stoner_wolfarth_main(ParticleRange const &particles) {
+void stoner_wolfarth_main(ParticleRange const &particles,
+                          std::mt19937 &rng_generator) {
   /* collect particle data */
   std::vector<Particle *> local_real_particles;
   std::vector<Particle *> local_virt_particles;
@@ -183,51 +184,88 @@ void stoner_wolfarth_main(ParticleRange const &particles) {
       auto rot_axis =
           vector_product(vector_product(e_h, e_k), e_h).normalized();
       auto phi = funct(theta, h, (*pi)->phi0(), (*pi)->kT_KVm_inv(),
-                       (*pi)->tau0_inv(), (*pi)->dt_incr());
+                       (*pi)->tau0_inv(), (*pi)->dt_incr(), rng_generator);
       (*pi)->phi0() = phi;
       auto mom = e_h * std::cos(phi) + rot_axis * std::sin(phi);
       auto const [quat, dipm] = convert_dip_to_quat(mom * (*p)->sat_mag());
       (*p)->dipm() = dipm;
       (*p)->quat() = quat;
     }
-    on_dipoles_change();
+    // on_dipoles_change();
   } else {
-    std::random_device rd;
-    std::default_random_engine generator(rd());
     std::uniform_real_distribution<double> distribution(0.0, 1.0);
     auto p = local_virt_particles.begin();
     for (auto pi = local_real_particles.begin();
          pi != local_real_particles.end(); ++pi, ++p) {
       Utils::Vector3d e_k = (*pi)->calc_director();
 
-      double tau_inv = (*pi)->tau0_inv() * exp(-(*pi)->kT_KVm_inv());
+      // double tau_inv = (*pi)->tau0_inv() * exp(-(*pi)->kT_KVm_inv());
+      double b_min = (*pi)->kT_KVm_inv();
+      double alpha_inv = b_min * (*pi)->tau0_inv() *
+                         ((1 / (1 + 1 / b_min)) * std::sqrt(b_min / M_PI) +
+                          std::pow(2, -b_min - 1));
+      double tau_inv = alpha_inv * 1 / (exp(b_min) - 1);
       double p12 = 1. - exp(-(*pi)->dt_incr() * tau_inv);
-      if (distribution(generator) < p12) {
+      if (distribution(rng_generator) < p12) {
         if ((*pi)->phi0() == 0) {
           auto const [quat, dipm] = convert_dip_to_quat((*p)->sat_mag() * -e_k);
           (*pi)->phi0() = M_PI;
           (*p)->dipm() = dipm;
           (*p)->quat() = quat;
 
-        } else {
+        } else if ((*pi)->phi0() == M_PI) {
           auto const [quat, dipm] = convert_dip_to_quat((*p)->sat_mag() * e_k);
           (*pi)->phi0() = 0;
           (*p)->dipm() = dipm;
           (*p)->quat() = quat;
+        } else {
+          double diff_0 = std::abs((*pi)->phi0() - 0);
+          double diff_PI = std::abs((*pi)->phi0() - M_PI);
+          // Compare the differences and determine the closer angle
+          if (diff_0 < diff_PI) {
+            auto const [quat, dipm] =
+                convert_dip_to_quat((*p)->sat_mag() * -e_k);
+            (*pi)->phi0() = M_PI;
+            (*p)->dipm() = dipm;
+            (*p)->quat() = quat;
+          } else {
+            auto const [quat, dipm] =
+                convert_dip_to_quat((*p)->sat_mag() * e_k);
+            (*pi)->phi0() = 0;
+            (*p)->dipm() = dipm;
+            (*p)->quat() = quat;
+          }
         }
       } else {
         if ((*pi)->phi0() == 0) {
           auto const [quat, dipm] = convert_dip_to_quat((*p)->sat_mag() * e_k);
           (*p)->dipm() = dipm;
           (*p)->quat() = quat;
-        } else {
+        } else if ((*pi)->phi0() == M_PI) {
           auto const [quat, dipm] = convert_dip_to_quat((*p)->sat_mag() * -e_k);
           (*p)->dipm() = dipm;
           (*p)->quat() = quat;
+        } else {
+          double diff_0 = std::abs((*pi)->phi0() - 0);
+          double diff_PI = std::abs((*pi)->phi0() - M_PI);
+          // Compare the differences and determine the closer angle
+          if (diff_0 < diff_PI) {
+            auto const [quat, dipm] =
+                convert_dip_to_quat((*p)->sat_mag() * e_k);
+            (*pi)->phi0() = 0;
+            (*p)->dipm() = dipm;
+            (*p)->quat() = quat;
+          } else {
+            auto const [quat, dipm] =
+                convert_dip_to_quat((*p)->sat_mag() * -e_k);
+            (*pi)->phi0() = M_PI;
+            (*p)->dipm() = dipm;
+            (*p)->quat() = quat;
+          }
         }
       }
     }
-    on_dipoles_change();
+    // on_dipoles_change();
   }
 }
 #endif

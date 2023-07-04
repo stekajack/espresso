@@ -22,6 +22,7 @@
 #ifdef DIPOLES
 
 #include "ParticleRange.hpp"
+#include <random>
 
 /**
  * @brief Dipolar all with all and no replica.
@@ -29,6 +30,7 @@
  * Assumes minimum image convention for those axis in which the
  * system is periodic.
  */
-void stoner_wolfarth_main(ParticleRange const &particles);
+void stoner_wolfarth_main(ParticleRange const &particles,
+                          std::mt19937 &rng_generator);
 
 #endif // DIPOLES
