@@ -793,10 +793,12 @@ cdef class ParticleHandle:
                     #    egg_gamma, 1, float, "egg_gamma has to be given as a float.")
                     #check_type_or_throw_except(
                     #    aniso_energy, 1, float, "aniso_energy has to be given as a float.")
-
+                    
+                    self.update_particle_data()
                     cdef int use_egg_model = 0
                     cdef double egg_gamma = 1.
                     cdef double aniso_energy = 0.
+                    get_particle_egg_model_params(self.particle_data, use_egg_model, egg_gamma, aniso_energy)
 
                     if "use_egg_model" in _params:
                         check_type_or_throw_except(
