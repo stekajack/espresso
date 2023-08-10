@@ -179,12 +179,7 @@ struct ParticleProperties {
 #endif // VIRTUAL_SITES_RELATIVE
 
 #ifdef EGG_MODEL
-  /** The following properties define, with respect to which real particle a
-   *  virtual site is placed and at what distance. The relative orientation of
-   *  the vector pointing from real particle to virtual site with respect to the
-   *  orientation of the real particle is stored in the virtual site's
-   *  quaternion attribute.
-   */
+
   struct EggModelParameters {
 
     bool use_egg_model = false;
