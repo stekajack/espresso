@@ -760,7 +760,7 @@ cdef class ParticleHandle:
                     q = get_particle_axis_quat_body(self.particle_data)
                     return array_locked([q[0], q[1], q[2], q[3]])
 
-            property egg_mode_params:
+            property egg_model_params:
                 """
                 Egg model parameters.
 
