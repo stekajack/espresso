@@ -168,11 +168,10 @@ void stoner_wolfarth_main(ParticleRange const &particles,
     auto p = local_virt_particles.begin();
     for (auto pi = local_real_particles.begin();
          pi != local_real_particles.end(); ++pi, ++p) {
-
-      ext_fld += (*p)->dip_fld();
-
-      double h = ext_fld.norm() * (*p)->Hkinv();
-      auto e_h = ext_fld.normalized();
+      Utils::Vector3d ext_fld_dpl = {0., 0., 0.};
+      ext_fld_dpl = ext_fld + (*p)->dip_fld();
+      double h = ext_fld_dpl.norm() * (*p)->Hkinv();
+      auto e_h = ext_fld_dpl.normalized();
       // calc_director() result already normalised
       Utils::Vector3d e_k = (*pi)->calc_director();
       double theta = std::acos(e_h * e_k);
