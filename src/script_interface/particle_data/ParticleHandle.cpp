@@ -219,6 +219,11 @@ ParticleHandle::ParticleHandle() {
          set_particle_dip_fld(m_pid, get_value<Utils::Vector3d>(value));
        },
        [this]() { return particle().dip_fld(); }},
+      {"dip_sw",
+       [this](Variant const &value) {
+         set_particle_dip_sw(m_pid, get_value<Utils::Vector3d>(value));
+       },
+       [this]() { return particle().dip_sw(); }},
       {"sw_real",
        [this](Variant const &value) {
          set_particle_sw_real(m_pid, get_value<bool>(value));

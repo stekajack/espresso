@@ -185,10 +185,7 @@ void stoner_wolfarth_main(ParticleRange const &particles,
       auto phi = funct(theta, h, (*pi)->phi0(), (*pi)->kT_KVm_inv(),
                        (*pi)->tau0_inv(), (*pi)->dt_incr(), rng_generator);
       (*pi)->phi0() = phi;
-      auto mom = e_h * std::cos(phi) + rot_axis * std::sin(phi);
-      auto const [quat, dipm] = convert_dip_to_quat(mom * (*p)->sat_mag());
-      (*p)->dipm() = dipm;
-      (*p)->quat() = quat;
+      (*p)->dip_sw() = e_h * std::cos(phi) + rot_axis * std::sin(phi);
     }
     // on_dipoles_change();
   } else {
@@ -266,5 +263,29 @@ void stoner_wolfarth_main(ParticleRange const &particles,
     }
     // on_dipoles_change();
   }
+}
+
+void reset_dipoles_SW(ParticleRange const &particles) {
+  /* collect particle data */
+  std::vector<Particle *> local_real_particles;
+  std::vector<Particle *> local_virt_particles;
+  local_real_particles.reserve(particles.size());
+  local_virt_particles.reserve(particles.size());
+  for (auto &p : particles) {
+    if (p.sw_real() == 1) {
+      local_real_particles.emplace_back(&p);
+    } else if (p.sw_virt() == 1) {
+      local_virt_particles.emplace_back(&p);
+    }
+  }
+
+  for (auto p = local_virt_particles.begin(); p != local_virt_particles.end();
+       ++p) {
+    auto const [quat, dipm] =
+        convert_dip_to_quat((*p)->dip_sw() * (*p)->sat_mag());
+    (*p)->dipm() = dipm;
+    (*p)->quat() = quat;
+  }
+  // on_dipoles_change();
 }
 #endif

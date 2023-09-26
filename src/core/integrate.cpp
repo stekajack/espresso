@@ -59,6 +59,7 @@
 
 #include <profiler/profiler.hpp>
 
+#include "magnetostatics/stoner_wolfarth_thermal.hpp"
 #include <boost/mpi/collectives/reduce.hpp>
 #include <boost/range/algorithm/min_element.hpp>
 
@@ -73,6 +74,9 @@
 #ifdef VALGRIND_MARKERS
 #include <callgrind.h>
 #endif
+
+std::random_device rd;
+static std::mt19937 generator = Random::mt19937(static_cast<unsigned>(rd()));
 
 int integ_switch = INTEG_METHOD_NVT;
 
@@ -305,6 +309,7 @@ int integrate(int n_steps, int reuse_forces) {
     ESPRESSO_PROFILER_CXX_MARK_LOOP_ITERATION(integration_loop, step);
 
     auto particles = cell_structure.local_particles();
+    stoner_wolfarth_main(cell_structure.local_particles(), generator);
 
 #ifdef BOND_CONSTRAINT
     if (n_rigidbonds)
@@ -348,7 +353,7 @@ int integrate(int n_steps, int reuse_forces) {
     cells_update_ghosts(global_ghost_flags());
 
     particles = cell_structure.local_particles();
-
+    reset_dipoles_SW(cell_structure.local_particles());
     force_calc(cell_structure, time_step, temperature);
 
 #ifdef VIRTUAL_SITES

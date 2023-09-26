@@ -68,7 +68,7 @@ struct ParticleParametersSwimming {
   double dipole_length = 0.;
 
   template <class Archive> void serialize(Archive &ar, long int /* version */) {
-    ar &swimming &f_swim &v_swim &push_pull &dipole_length;
+    ar & swimming & f_swim & v_swim & push_pull & dipole_length;
   }
 };
 
@@ -175,6 +175,8 @@ struct ParticleProperties {
   double tau0_inv = 0.;
   /** units parameter for the kinetic MC step */
   double dt_incr = 0.;
+  Utils::Vector3d dip_sw = {0., 0., 0.};
+
 #endif
 
 #ifdef VIRTUAL_SITES_RELATIVE
@@ -194,10 +196,10 @@ struct ParticleProperties {
     Utils::Quaternion<double> quat = Utils::Quaternion<double>::identity();
 
     template <class Archive> void serialize(Archive &ar, long int) {
-      ar &to_particle_id;
-      ar &distance;
-      ar &rel_orientation;
-      ar &quat;
+      ar & to_particle_id;
+      ar & distance;
+      ar & rel_orientation;
+      ar & quat;
     }
   } vs_relative;
 #endif // VIRTUAL_SITES_RELATIVE
@@ -233,62 +235,64 @@ struct ParticleProperties {
 #endif
 
   template <class Archive> void serialize(Archive &ar, long int /* version */) {
-    ar &identity;
-    ar &mol_id;
-    ar &type;
+    ar & identity;
+    ar & mol_id;
+    ar & type;
 #ifdef MASS
-    ar &mass;
+    ar & mass;
 #endif
 #ifdef ROTATIONAL_INERTIA
-    ar &rinertia;
+    ar & rinertia;
 #endif
 #ifdef ROTATION
-    ar &rotation;
+    ar & rotation;
 #endif
 #ifdef ELECTROSTATICS
-    ar &q;
+    ar & q;
 #endif
 
 #ifdef LB_ELECTROHYDRODYNAMICS
-    ar &mu_E;
+    ar & mu_E;
 #endif
 #ifdef DIPOLES
-    ar &dipm;
+    ar & dipm;
 #endif
 #ifdef DIPSUS
-    ar &dip_fld;
-    ar &sw_real;
-    ar &sw_virt;
-    ar &phi0;
-    ar &sat_mag;
-    ar &Hkinv;
-    ar &kT_KVm_inv;
-    ar &tau0_inv;
-    ar &dt_incr;
+    ar & dip_fld;
+    ar & sw_real;
+    ar & sw_virt;
+    ar & phi0;
+    ar & sat_mag;
+    ar & Hkinv;
+    ar & kT_KVm_inv;
+    ar & tau0_inv;
+    ar & dt_incr;
+    ar & dip_sw;
+
 #endif
 #ifdef VIRTUAL_SITES
-    ar &is_virtual;
+    ar & is_virtual;
 #ifdef VIRTUAL_SITES_RELATIVE
-    ar &vs_relative;
+    ar & vs_relative;
 #endif
 #endif // VIRTUAL_SITES
 
 #ifdef THERMOSTAT_PER_PARTICLE
-    ar &gamma;
+    ar & gamma;
 #ifdef ROTATION
-    ar &gamma_rot;
+    ar & gamma_rot;
 #endif
 #endif // THERMOSTAT_PER_PARTICLE
 #ifdef EXTERNAL_FORCES
-    ar &ext_flag;
-    ar &ext_force;
+    ar & ext_flag;
+    ar & ext_force;
 #ifdef ROTATION
-    ar &ext_torque;
+    ar & ext_torque;
 #endif
 #endif // EXTERNAL_FORCES
 
 #ifdef ENGINE
-    ar &swim;
+    ar & swim;
 #endif
   }
 };
@@ -315,12 +319,12 @@ struct ParticlePosition {
 #endif
 
   template <class Archive> void serialize(Archive &ar, long int /* version */) {
-    ar &p;
+    ar & p;
 #ifdef ROTATION
-    ar &quat;
+    ar & quat;
 #endif
 #ifdef BOND_CONSTRAINT
-    ar &p_last_timestep;
+    ar & p_last_timestep;
 #endif
   }
 };
@@ -360,9 +364,9 @@ struct ParticleForce {
 #endif
 
   template <class Archive> void serialize(Archive &ar, long int /* version */) {
-    ar &f;
+    ar & f;
 #ifdef ROTATION
-    ar &torque;
+    ar & torque;
 #endif
   }
 };
@@ -383,9 +387,9 @@ struct ParticleMomentum {
 #endif
 
   template <class Archive> void serialize(Archive &ar, long int /* version */) {
-    ar &v;
+    ar & v;
 #ifdef ROTATION
-    ar &omega;
+    ar & omega;
 #endif
   }
 };
@@ -405,11 +409,11 @@ struct ParticleLocal {
   double lees_edwards_offset = 0.;
 
   template <class Archive> void serialize(Archive &ar, long int /* version */) {
-    ar &ghost;
-    ar &lees_edwards_flag;
-    ar &i;
-    ar &p_old;
-    ar &lees_edwards_offset;
+    ar & ghost;
+    ar & lees_edwards_flag;
+    ar & i;
+    ar & p_old;
+    ar & lees_edwards_offset;
   }
 };
 
@@ -428,7 +432,7 @@ struct ParticleRattle {
   }
 
   template <class Archive> void serialize(Archive &ar, long int /* version */) {
-    ar &correction;
+    ar & correction;
   }
 };
 #endif
@@ -543,6 +547,8 @@ public:
 #ifdef DIPSUS
   auto const &dip_fld() const { return p.dip_fld; }
   auto &dip_fld() { return p.dip_fld; }
+  auto const &dip_sw() const { return p.dip_sw; }
+  auto &dip_sw() { return p.dip_sw; }
   bool sw_real() const { return p.sw_real; }
   bool sw_virt() const { return p.sw_virt; }
   auto const &phi0() const { return p.phi0; }
@@ -641,14 +647,14 @@ public:
 private:
   friend boost::serialization::access;
   template <class Archive> void serialize(Archive &ar, long int /* version */) {
-    ar &p;
-    ar &r;
-    ar &m;
-    ar &f;
-    ar &l;
-    ar &bl;
+    ar & p;
+    ar & r;
+    ar & m;
+    ar & f;
+    ar & l;
+    ar & bl;
 #ifdef EXCLUSIONS
-    ar &el;
+    ar & el;
 #endif
   }
 };

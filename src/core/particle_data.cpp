@@ -70,7 +70,7 @@ struct UpdateParticle {
 
   void operator()(Particle &p) const { (p.*s).*m = value; }
 
-  template <class Archive> void serialize(Archive &ar, long int) { ar &value; }
+  template <class Archive> void serialize(Archive &ar, long int) { ar & value; }
 };
 
 template <typename T, T ParticleProperties::*m>
@@ -114,6 +114,7 @@ using UpdatePropertyMessage = boost::variant
 #endif
 #ifdef DIPSUS
         , UpdateProperty<Utils::Vector3d, &Prop::dip_fld>
+        , UpdateProperty<Utils::Vector3d, &Prop::dip_sw>
         , UpdateProperty<bool, &Prop::sw_real>
         , UpdateProperty<bool, &Prop::sw_virt>
         , UpdateProperty<double, &Prop::phi0>
@@ -195,7 +196,7 @@ struct RemoveBond {
     }
   }
 
-  template <class Archive> void serialize(Archive &ar, long int) { ar &bond; }
+  template <class Archive> void serialize(Archive &ar, long int) { ar & bond; }
 };
 
 /**
@@ -216,7 +217,7 @@ struct RemovePairBondsTo {
     }
   }
   template <class Archive> void serialize(Archive &ar, long int) {
-    ar &other_pid;
+    ar & other_pid;
   }
 };
 
@@ -238,7 +239,7 @@ struct AddBond {
     p.bonds().insert(view);
   }
 
-  template <class Archive> void serialize(Archive &ar, long int) { ar &bond; }
+  template <class Archive> void serialize(Archive &ar, long int) { ar & bond; }
 };
 
 // clang-format off
@@ -257,7 +258,7 @@ struct UpdateOrientation {
   void operator()(Particle &p) const { local_rotate_particle(p, axis, angle); }
 
   template <class Archive> void serialize(Archive &ar, long int) {
-    ar &axis &angle;
+    ar & axis & angle;
   }
 };
 #endif
@@ -487,6 +488,10 @@ void set_particle_dip(int part, Utils::Vector3d const &dip) {
 void set_particle_dip_fld(int part, const Utils::Vector3d &dip_fld) {
   mpi_update_particle_property<Utils::Vector3d, &ParticleProperties::dip_fld>(
       part, dip_fld);
+}
+void set_particle_dip_sw(int part, const Utils::Vector3d &dip_sw) {
+  mpi_update_particle_property<Utils::Vector3d, &ParticleProperties::dip_sw>(
+      part, dip_sw);
 }
 void set_particle_sw_real(int part, bool sw_real) {
   mpi_update_particle_property<bool, &ParticleProperties::sw_real>(part,
