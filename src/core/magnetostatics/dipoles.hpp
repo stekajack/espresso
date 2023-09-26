@@ -115,7 +115,6 @@ void on_periodicity_change();
 void on_cell_structure_change();
 
 void calc_long_range_field(ParticleRange const &particles);
-void calc_stoner_wolfarth_dip(ParticleRange const &particles);
 void calc_long_range_force(ParticleRange const &particles);
 double calc_energy_long_range(ParticleRange const &particles);
 

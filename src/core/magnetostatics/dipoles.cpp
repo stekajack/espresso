@@ -202,21 +202,6 @@ struct LongRangeField : public boost::static_visitor<void> {
   }
 };
 
-struct SWDipoleField : public boost::static_visitor<void> {
-  ParticleRange const &m_particles;
-  explicit SWDipoleField(ParticleRange const &particles)
-      : m_particles(particles) {}
-
-  void operator()(std::shared_ptr<DipolarDirectSum> const &actor) const {
-    actor->stoner_wolfarth_main(m_particles);
-  }
-  template <typename T, std::enable_if_t<!traits::has_sw<T>::value> * = nullptr>
-  void operator()(std::shared_ptr<T> const &) const {
-    runtimeWarningMsg() << "Stoner Wolfarth calculation not implemented by "
-                        << "dipolar method " << Utils::demangle<T>();
-  }
-};
-
 void calc_long_range_force(ParticleRange const &particles) {
   if (magnetostatics_actor) {
     boost::apply_visitor(LongRangeForce(particles), *magnetostatics_actor);
@@ -234,12 +219,6 @@ double calc_energy_long_range(ParticleRange const &particles) {
 void calc_long_range_field(ParticleRange const &particles) {
   if (magnetostatics_actor) {
     boost::apply_visitor(LongRangeField(particles), *magnetostatics_actor);
-  }
-}
-
-void calc_stoner_wolfarth_dip(ParticleRange const &particles) {
-  if (magnetostatics_actor) {
-    boost::apply_visitor(SWDipoleField(particles), *magnetostatics_actor);
   }
 }
 

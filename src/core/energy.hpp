@@ -54,7 +54,3 @@ double particle_short_range_energy_contribution(int pid);
 
 /** Calculate dipole fields (mdds only for now). */
 void calc_long_range_fields(CellStructure &cell_structure);
-
-/** Calculate dipole moment using stoner wolfarth with a kinetic monte-carlo
- * step (mdds only for now). */
-void calc_stoner_wolfarth_dip(CellStructure &cell_structure);
