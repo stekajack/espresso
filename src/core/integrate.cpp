@@ -309,7 +309,6 @@ int integrate(int n_steps, int reuse_forces) {
     ESPRESSO_PROFILER_CXX_MARK_LOOP_ITERATION(integration_loop, step);
 
     auto particles = cell_structure.local_particles();
-    stoner_wolfarth_main(cell_structure.local_particles(), generator);
 
 #ifdef BOND_CONSTRAINT
     if (n_rigidbonds)
@@ -353,7 +352,7 @@ int integrate(int n_steps, int reuse_forces) {
     cells_update_ghosts(global_ghost_flags());
 
     particles = cell_structure.local_particles();
-    reset_dipoles_SW(cell_structure.local_particles());
+    stoner_wolfarth_main(cell_structure.local_particles(), generator);
     force_calc(cell_structure, time_step, temperature);
 
 #ifdef VIRTUAL_SITES

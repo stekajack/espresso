@@ -72,9 +72,9 @@ double phi_objective(unsigned n, const double *x, double *grad,
 }
 
 /*
-SW energy minimisation step with kinetic MC step. SW energy normalised by the
-anisotropy field H_k (Hkinv stored on part to avoid division, h is the reduced
-field  due to the normalisation)
+SW energy minimisation step with MC dip_mom flip step. SW energy normalised by
+the anisotropy field H_k (Hkinv stored on part to avoid division, h is the
+reduced field  due to the normalisation)
 */
 double funct(double theta, double h, double phi0, double kT_KVm_inv,
              double tau0_inv, double dt, std::mt19937 &rng_generator) {
@@ -100,7 +100,7 @@ double funct(double theta, double h, double phi0, double kT_KVm_inv,
   opt.optimize(x, min1);
   double phi_min1 = fmod(x[0], TWO_M_PI);
   double sol = phi_min1;
-  if (h < h_crit) {
+  if (fabs(h) < h_crit) {
     opt.set_max_objective(phi_objective, &params);
     x[0] = phi0 + eps_phi;
     double max1;
@@ -113,14 +113,7 @@ double funct(double theta, double h, double phi0, double kT_KVm_inv,
     double b1 = std::abs(max1 - min1) * kT_KVm_inv;
     double b2 = std::abs(max2 - min1) * kT_KVm_inv;
     double b_min = (b1 < b2) ? b1 : b2;
-    // double tau_inv = tau0_inv * exp(-b_min);
-    // double tau_inv = tau0_inv * (std::sqrt(1 - h) * (1 - h * h)) /
-    //                  std::cos(std::asin(h)) * exp(-b_min * (1 - h) * (1 -
-    //                  h));
-    double alpha_inv = b_min * tau0_inv *
-                       ((1 / (1 + 1 / b_min)) * std::sqrt(b_min / M_PI) +
-                        std::pow(2, -b_min - 1));
-    double tau_inv = alpha_inv * 1 / (exp(b_min) - 1);
+    double tau_inv = tau0_inv * exp(-b_min);
     double p12 = 1. - exp(-dt * tau_inv);
 
     if (distribution(rng_generator) < p12) {
@@ -185,7 +178,10 @@ void stoner_wolfarth_main(ParticleRange const &particles,
       auto phi = funct(theta, h, (*pi)->phi0(), (*pi)->kT_KVm_inv(),
                        (*pi)->tau0_inv(), (*pi)->dt_incr(), rng_generator);
       (*pi)->phi0() = phi;
-      (*p)->dip_sw() = e_h * std::cos(phi) + rot_axis * std::sin(phi);
+      auto mom = e_h * std::cos(phi) + rot_axis * std::sin(phi);
+      auto const [quat, dipm] = convert_dip_to_quat(mom * (*p)->sat_mag());
+      (*p)->dipm() = dipm;
+      (*p)->quat() = quat;
     }
     // on_dipoles_change();
   } else {
@@ -194,13 +190,7 @@ void stoner_wolfarth_main(ParticleRange const &particles,
     for (auto pi = local_real_particles.begin();
          pi != local_real_particles.end(); ++pi, ++p) {
       Utils::Vector3d e_k = (*pi)->calc_director();
-
-      // double tau_inv = (*pi)->tau0_inv() * exp(-(*pi)->kT_KVm_inv());
-      double b_min = (*pi)->kT_KVm_inv();
-      double alpha_inv = b_min * (*pi)->tau0_inv() *
-                         ((1 / (1 + 1 / b_min)) * std::sqrt(b_min / M_PI) +
-                          std::pow(2, -b_min - 1));
-      double tau_inv = alpha_inv * 1 / (exp(b_min) - 1);
+      double tau_inv = (*pi)->tau0_inv() * exp(-(*pi)->kT_KVm_inv());
       double p12 = 1. - exp(-(*pi)->dt_incr() * tau_inv);
       if (distribution(rng_generator) < p12) {
         if ((*pi)->phi0() == 0) {
@@ -208,7 +198,6 @@ void stoner_wolfarth_main(ParticleRange const &particles,
           (*pi)->phi0() = M_PI;
           (*p)->dipm() = dipm;
           (*p)->quat() = quat;
-
         } else if ((*pi)->phi0() == M_PI) {
           auto const [quat, dipm] = convert_dip_to_quat((*p)->sat_mag() * e_k);
           (*pi)->phi0() = 0;
@@ -261,31 +250,8 @@ void stoner_wolfarth_main(ParticleRange const &particles,
         }
       }
     }
-    // on_dipoles_change();
   }
-}
-
-void reset_dipoles_SW(ParticleRange const &particles) {
-  /* collect particle data */
-  std::vector<Particle *> local_real_particles;
-  std::vector<Particle *> local_virt_particles;
-  local_real_particles.reserve(particles.size());
-  local_virt_particles.reserve(particles.size());
-  for (auto &p : particles) {
-    if (p.sw_real() == 1) {
-      local_real_particles.emplace_back(&p);
-    } else if (p.sw_virt() == 1) {
-      local_virt_particles.emplace_back(&p);
-    }
-  }
-
-  for (auto p = local_virt_particles.begin(); p != local_virt_particles.end();
-       ++p) {
-    auto const [quat, dipm] =
-        convert_dip_to_quat((*p)->dip_sw() * (*p)->sat_mag());
-    (*p)->dipm() = dipm;
-    (*p)->quat() = quat;
-  }
+  // this call might be necessart when using p3m! significant overhead
   // on_dipoles_change();
 }
 #endif

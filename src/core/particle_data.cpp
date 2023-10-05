@@ -114,7 +114,6 @@ using UpdatePropertyMessage = boost::variant
 #endif
 #ifdef DIPSUS
         , UpdateProperty<Utils::Vector3d, &Prop::dip_fld>
-        , UpdateProperty<Utils::Vector3d, &Prop::dip_sw>
         , UpdateProperty<bool, &Prop::sw_real>
         , UpdateProperty<bool, &Prop::sw_virt>
         , UpdateProperty<double, &Prop::phi0>
@@ -489,10 +488,7 @@ void set_particle_dip_fld(int part, const Utils::Vector3d &dip_fld) {
   mpi_update_particle_property<Utils::Vector3d, &ParticleProperties::dip_fld>(
       part, dip_fld);
 }
-void set_particle_dip_sw(int part, const Utils::Vector3d &dip_sw) {
-  mpi_update_particle_property<Utils::Vector3d, &ParticleProperties::dip_sw>(
-      part, dip_sw);
-}
+
 void set_particle_sw_real(int part, bool sw_real) {
   mpi_update_particle_property<bool, &ParticleProperties::sw_real>(part,
                                                                    sw_real);

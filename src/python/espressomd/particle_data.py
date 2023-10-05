@@ -417,7 +417,7 @@ class ParticleHandle(ScriptInterfaceHelper):
         pdict["bonds"] = self.bonds
         return pdict
 
-    def to_dict_of_god(self, list_prop=['pos', 'pos_folded', 'f', 'dip', 'dipm']):
+    def to_dict_of_god(self, list_prop=['pos', 'pos_folded', 'f', 'dip', 'dipm', 'director']):
         """
         Custom vesion of the to_dict().Returns the particle's attributes as a dictionary.
         It includes the content of the list_prop argument to be passed as a list of strings.

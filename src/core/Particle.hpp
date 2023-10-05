@@ -175,7 +175,6 @@ struct ParticleProperties {
   double tau0_inv = 0.;
   /** units parameter for the kinetic MC step */
   double dt_incr = 0.;
-  Utils::Vector3d dip_sw = {0., 0., 0.};
 
 #endif
 
@@ -267,7 +266,6 @@ struct ParticleProperties {
     ar & kT_KVm_inv;
     ar & tau0_inv;
     ar & dt_incr;
-    ar & dip_sw;
 
 #endif
 #ifdef VIRTUAL_SITES
@@ -547,8 +545,6 @@ public:
 #ifdef DIPSUS
   auto const &dip_fld() const { return p.dip_fld; }
   auto &dip_fld() { return p.dip_fld; }
-  auto const &dip_sw() const { return p.dip_sw; }
-  auto &dip_sw() { return p.dip_sw; }
   bool sw_real() const { return p.sw_real; }
   bool sw_virt() const { return p.sw_virt; }
   auto const &phi0() const { return p.phi0; }
