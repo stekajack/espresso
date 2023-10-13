@@ -36,6 +36,7 @@
 #include <utils/cartesian_product.hpp>
 #include <utils/constants.hpp>
 #include <utils/math/sqr.hpp>
+#include <utils/math/vec_rotate.hpp>
 #include <utils/mpi/iall_gatherv.hpp>
 
 #include <boost/mpi/collectives.hpp>
@@ -130,6 +131,28 @@ double funct(double theta, double h, double phi0, double kT_KVm_inv,
   return fmod(sol + TWO_M_PI, TWO_M_PI);
 }
 
+double funct_tans(double sol, double theta, double h, double kT_KVm_inv,
+                  double tau_trans_inv, double dt,
+                  std::mt19937 &rng_generator) {
+
+  std::uniform_real_distribution<double> ang_distribution(-M_PI_2, M_PI_2);
+  std::uniform_real_distribution<double> distribution(0, 1);
+
+  double shift = ang_distribution(rng_generator);
+  double attempot_ang = sol + shift;
+  double params[] = {theta, h};
+  double b_min = std::abs(phi_objective(1, &sol, nullptr, &params) -
+                          phi_objective(1, &attempot_ang, nullptr, &params)) *
+                 kT_KVm_inv;
+  double tau_inv = tau_trans_inv * b_min;
+  double p12 = 1. - exp(-dt * tau_inv);
+  // std::cout << p12 << "\n";s
+  if (distribution(rng_generator) > p12) {
+    shift = 0;
+  }
+  return shift;
+}
+
 } // namespace
 
 void stoner_wolfarth_main(ParticleRange const &particles,
@@ -177,8 +200,12 @@ void stoner_wolfarth_main(ParticleRange const &particles,
           vector_product(vector_product(e_h, e_k), e_h).normalized();
       auto phi = funct(theta, h, (*pi)->phi0(), (*pi)->kT_KVm_inv(),
                        (*pi)->tau0_inv(), (*pi)->dt_incr(), rng_generator);
-      (*pi)->phi0() = phi;
+      auto shift =
+          funct_tans(phi, theta, h, (*pi)->kT_KVm_inv(), (*pi)->tau_trans_inv(),
+                     (*pi)->dt_incr(), rng_generator);
       auto mom = e_h * std::cos(phi) + rot_axis * std::sin(phi);
+      mom = Utils::vec_rotate(vector_product(e_h, rot_axis), shift, mom);
+      (*pi)->phi0() = phi + shift;
       auto const [quat, dipm] = convert_dip_to_quat(mom * (*p)->sat_mag());
       (*p)->dipm() = dipm;
       (*p)->quat() = quat;

@@ -181,6 +181,8 @@ void set_particle_sat_mag(int part, double phi0);
 void set_particle_Hkinv(int part, double Hkinv);
 void set_particle_kT_KVm_inv(int part, double kT_KVm_inv);
 void set_particle_tau0_inv(int part, double tau0_inv);
+void set_particle_tau_trans_inv(int part, double tau_trans_inv);
+
 void set_particle_dt_incr(int part, double dt_incr);
 
 #endif

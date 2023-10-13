@@ -173,6 +173,8 @@ struct ParticleProperties {
   double kT_KVm_inv = 0.;
   /** units parameter for the kinetic MC step */
   double tau0_inv = 0.;
+  double tau_trans_inv = 0.;
+
   /** units parameter for the kinetic MC step */
   double dt_incr = 0.;
 
@@ -265,6 +267,8 @@ struct ParticleProperties {
     ar & Hkinv;
     ar & kT_KVm_inv;
     ar & tau0_inv;
+    ar & tau_trans_inv;
+
     ar & dt_incr;
 
 #endif
@@ -557,6 +561,8 @@ public:
   auto &kT_KVm_inv() { return p.kT_KVm_inv; }
   auto const &tau0_inv() const { return p.tau0_inv; }
   auto &tau0_inv() { return p.tau0_inv; };
+  auto const &tau_trans_inv() const { return p.tau_trans_inv; }
+  auto &tau_trans_inv() { return p.tau_trans_inv; };
   auto const &dt_incr() const { return p.dt_incr; }
   auto &dt_incr() { return p.dt_incr; }
 #endif

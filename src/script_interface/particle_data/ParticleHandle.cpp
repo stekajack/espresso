@@ -254,6 +254,11 @@ ParticleHandle::ParticleHandle() {
          set_particle_tau0_inv(m_pid, get_value<double>(value));
        },
        [this]() { return particle().tau0_inv(); }},
+      {"tau_trans_inv",
+       [this](Variant const &value) {
+         set_particle_tau_trans_inv(m_pid, get_value<double>(value));
+       },
+       [this]() { return particle().tau_trans_inv(); }},
       {"dt_incr",
        [this](Variant const &value) {
          set_particle_dt_incr(m_pid, get_value<double>(value));
