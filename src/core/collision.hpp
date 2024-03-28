@@ -53,6 +53,8 @@ public:
   CollisionModeType mode;
   /// distance at which particles are bound
   double distance;
+  // type of particles to be considered
+  int type;
   // Square of distance at which particle are bound
   double distance2;
 
@@ -117,6 +119,10 @@ inline bool glue_to_surface_criterion(Particle const &p1, Particle const &p2) {
 /** @brief Detect (and queue) a collision between the given particles. */
 inline void detect_collision(Particle const &p1, Particle const &p2,
                              double const dist2) {
+  // check is particle type matches the type of interest. if not skip the whole
+  // calculation
+  if (p1.type() != collision_params.type || p2.type() != collision_params.type)
+    return;
   if (dist2 > collision_params.distance2)
     return;
 
@@ -127,8 +133,8 @@ inline void detect_collision(Particle const &p1, Particle const &p2,
       return;
 
   // Ignore virtual particles
-  if (p1.is_virtual() or p2.is_virtual())
-    return;
+  // if (p1.is_virtual() or p2.is_virtual())
+  //   return;
 
   // Check, if there's already a bond between the particles
   if (pair_bond_exists_on(p1.bonds(), p2.id(), collision_params.bond_centers))

@@ -50,22 +50,23 @@ class CollisionDetection : public AutoParameters<CollisionDetection> {
       {CollisionModeType::BIND_THREE_PARTICLES, "bind_three_particles"},
   };
   std::unordered_map<std::string, CollisionModeType> cd_name_to_mode;
-  std::unordered_map<CollisionModeType,
-                     std::vector<std::string>> const cd_mode_to_parameters = {
-      {CollisionModeType::OFF, {"mode"}},
-      {CollisionModeType::BIND_CENTERS, {"mode", "bond_centers", "distance"}},
-      {CollisionModeType::BIND_VS,
-       {"mode", "bond_centers", "bond_vs", "part_type_vs", "distance",
-        "vs_placement"}},
-      {CollisionModeType::GLUE_TO_SURF,
-       {"mode", "bond_centers", "bond_vs", "part_type_vs",
-        "part_type_to_be_glued", "part_type_to_attach_vs_to",
-        "part_type_after_glueing", "distance",
-        "distance_glued_particle_to_vs"}},
-      {CollisionModeType::BIND_THREE_PARTICLES,
-       {"mode", "bond_centers", "distance", "bond_three_particles",
-        "three_particle_binding_angle_resolution"}},
-  };
+  std::unordered_map<CollisionModeType, std::vector<std::string>> const
+      cd_mode_to_parameters = {
+          {CollisionModeType::OFF, {"mode"}},
+          {CollisionModeType::BIND_CENTERS,
+           {"mode", "bond_centers", "distance", "type"}},
+          {CollisionModeType::BIND_VS,
+           {"mode", "bond_centers", "bond_vs", "part_type_vs", "distance",
+            "vs_placement"}},
+          {CollisionModeType::GLUE_TO_SURF,
+           {"mode", "bond_centers", "bond_vs", "part_type_vs",
+            "part_type_to_be_glued", "part_type_to_attach_vs_to",
+            "part_type_after_glueing", "distance",
+            "distance_glued_particle_to_vs"}},
+          {CollisionModeType::BIND_THREE_PARTICLES,
+           {"mode", "bond_centers", "distance", "bond_three_particles",
+            "three_particle_binding_angle_resolution"}},
+      };
 
 public:
   CollisionDetection() {
@@ -88,6 +89,7 @@ public:
           collision_params.three_particle_angle_resolution},
 
          {"distance", collision_params.distance},
+         {"type", collision_params.type},
          {"distance_glued_particle_to_vs",
           collision_params.dist_glued_part_to_vs},
          {"vs_placement", collision_params.vs_placement},
