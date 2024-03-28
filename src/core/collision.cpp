@@ -58,8 +58,8 @@ namespace boost {
 namespace serialization {
 template <typename Archive>
 void serialize(Archive &ar, CollisionPair &c, const unsigned int) {
-  ar &c.pp1;
-  ar &c.pp2;
+  ar & c.pp1;
+  ar & c.pp2;
 }
 } // namespace serialization
 } // namespace boost
@@ -93,6 +93,11 @@ static bool bind_centers() {
   // but does so later in the process. This is needed to guarantee that
   // a particle can only be glued once, even if queued twice in a single
   // time step
+  return collision_params.mode != CollisionModeType::OFF &&
+         collision_params.mode != CollisionModeType::GLUE_TO_SURF;
+}
+
+static bool steka_way() {
   return collision_params.mode != CollisionModeType::OFF &&
          collision_params.mode != CollisionModeType::GLUE_TO_SURF;
 }
@@ -145,6 +150,16 @@ void Collision_parameters::initialize() {
         "Bond in parameter 'bond_centers' was not added to the system");
   }
 
+  if ((collision_params.mode == CollisionModeType::STEKA_WAY) &&
+      !bonded_ia_params.contains(collision_params.bond_centers)) {
+    throw std::runtime_error(
+        "Bond in parameter 'bond_centers' was not added to the system");
+  }
+  if ((collision_params.mode == CollisionModeType::STEKA_WAY) &&
+      (get_bond_num_partners(collision_params.bond_centers) != 1)) {
+    throw std::runtime_error("The bond type to be used for binding particle "
+                             "centers needs to be a pair bond");
+  }
   if ((collision_params.mode == CollisionModeType::BIND_VS) &&
       !bonded_ia_params.contains(collision_params.bond_vs)) {
     throw std::runtime_error(
@@ -474,6 +489,19 @@ void handle_collisions() {
   // a particle can only be glued once, even if queued twice in a single
   // time step
   if (bind_centers()) {
+    for (auto &c : local_collision_queue) {
+      // put the bond to the non-ghost particle; at least one partner always is
+      if (cell_structure.get_local_particle(c.pp1)->is_ghost()) {
+        std::swap(c.pp1, c.pp2);
+      }
+
+      const int bondG[] = {c.pp2};
+
+      get_part(c.pp1).bonds().insert({collision_params.bond_centers, bondG});
+    }
+  }
+
+  if (steka_way()) {
     for (auto &c : local_collision_queue) {
       // put the bond to the non-ghost particle; at least one partner always is
       if (cell_structure.get_local_particle(c.pp1)->is_ghost()) {

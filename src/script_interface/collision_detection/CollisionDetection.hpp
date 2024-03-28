@@ -48,25 +48,27 @@ class CollisionDetection : public AutoParameters<CollisionDetection> {
       {CollisionModeType::BIND_VS, "bind_at_point_of_collision"},
       {CollisionModeType::GLUE_TO_SURF, "glue_to_surface"},
       {CollisionModeType::BIND_THREE_PARTICLES, "bind_three_particles"},
+      {CollisionModeType::STEKA_WAY, "steka_way"},
   };
   std::unordered_map<std::string, CollisionModeType> cd_name_to_mode;
-  std::unordered_map<CollisionModeType, std::vector<std::string>> const
-      cd_mode_to_parameters = {
-          {CollisionModeType::OFF, {"mode"}},
-          {CollisionModeType::BIND_CENTERS,
-           {"mode", "bond_centers", "distance", "type"}},
-          {CollisionModeType::BIND_VS,
-           {"mode", "bond_centers", "bond_vs", "part_type_vs", "distance",
-            "vs_placement"}},
-          {CollisionModeType::GLUE_TO_SURF,
-           {"mode", "bond_centers", "bond_vs", "part_type_vs",
-            "part_type_to_be_glued", "part_type_to_attach_vs_to",
-            "part_type_after_glueing", "distance",
-            "distance_glued_particle_to_vs"}},
-          {CollisionModeType::BIND_THREE_PARTICLES,
-           {"mode", "bond_centers", "distance", "bond_three_particles",
-            "three_particle_binding_angle_resolution"}},
-      };
+  std::unordered_map<CollisionModeType,
+                     std::vector<std::string>> const cd_mode_to_parameters = {
+      {CollisionModeType::OFF, {"mode"}},
+      {CollisionModeType::BIND_CENTERS, {"mode", "bond_centers", "distance"}},
+      {CollisionModeType::STEKA_WAY,
+       {"mode", "bond_centers", "distance", "type"}},
+      {CollisionModeType::BIND_VS,
+       {"mode", "bond_centers", "bond_vs", "part_type_vs", "distance",
+        "vs_placement"}},
+      {CollisionModeType::GLUE_TO_SURF,
+       {"mode", "bond_centers", "bond_vs", "part_type_vs",
+        "part_type_to_be_glued", "part_type_to_attach_vs_to",
+        "part_type_after_glueing", "distance",
+        "distance_glued_particle_to_vs"}},
+      {CollisionModeType::BIND_THREE_PARTICLES,
+       {"mode", "bond_centers", "distance", "bond_three_particles",
+        "three_particle_binding_angle_resolution"}},
+  };
 
 public:
   CollisionDetection() {

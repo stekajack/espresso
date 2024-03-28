@@ -40,7 +40,8 @@ enum class CollisionModeType : int {
   /** @brief Glue a particle to a specific spot on another particle. */
   GLUE_TO_SURF = 3,
   /** @brief Three particle binding mode. */
-  BIND_THREE_PARTICLES = 4
+  BIND_THREE_PARTICLES = 4,
+  STEKA_WAY = 666,
 };
 
 class Collision_parameters {
@@ -121,27 +122,36 @@ inline void detect_collision(Particle const &p1, Particle const &p2,
                              double const dist2) {
   // check is particle type matches the type of interest. if not skip the whole
   // calculation
-  if (p1.type() != collision_params.type || p2.type() != collision_params.type)
-    return;
   if (dist2 > collision_params.distance2)
     return;
 
+  if (collision_params.mode == CollisionModeType::STEKA_WAY) {
+    if (p1.type() != collision_params.type ||
+        p2.type() != collision_params.type)
+      return;
+  }
   // If we are in the glue to surface mode, check that the particles
   // are of the right type
   if (collision_params.mode == CollisionModeType::GLUE_TO_SURF)
     if (!glue_to_surface_criterion(p1, p2))
       return;
-
   // Ignore virtual particles
-  // if (p1.is_virtual() or p2.is_virtual())
-  //   return;
+  if (collision_params.mode != CollisionModeType::STEKA_WAY)
+    if (p1.is_virtual() or p2.is_virtual())
+      return;
 
-  // Check, if there's already a bond between the particles
-  if (pair_bond_exists_on(p1.bonds(), p2.id(), collision_params.bond_centers))
+  // Check if there's already a bond between the particles
+  if (collision_params.mode == CollisionModeType::STEKA_WAY &&
+      (bond_exists_on(p1.bonds(), collision_params.bond_centers) ||
+       bond_exists_on(p2.bonds(), collision_params.bond_centers))) {
     return;
+  } else {
+    if (pair_bond_exists_on(p1.bonds(), p2.id(), collision_params.bond_centers))
+      return;
 
-  if (pair_bond_exists_on(p2.bonds(), p1.id(), collision_params.bond_centers))
-    return;
+    if (pair_bond_exists_on(p2.bonds(), p1.id(), collision_params.bond_centers))
+      return;
+  }
 
   /* If we're still here, there is no previous bond between the particles,
      we have a new collision */

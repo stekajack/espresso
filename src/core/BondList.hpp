@@ -108,13 +108,13 @@ private:
   template <class Archive> void serialize(Archive &ar, long int /* version */) {
     if (Archive::is_loading::value) {
       std::size_t size{};
-      ar &size;
+      ar & size;
       m_storage.resize(size);
     }
 
     if (Archive::is_saving::value) {
       auto size = m_storage.size();
-      ar &size;
+      ar & size;
     }
 
     ar &boost::serialization::make_array(m_storage.data(), m_storage.size());
@@ -239,6 +239,12 @@ inline bool pair_bond_exists_on(BondList const &bonds, int partner_id,
   return std::any_of(bonds.begin(), bonds.end(), [=](BondView const &bond) {
     return (bond.bond_id() == bond_id) and
            (bond.partner_ids()[0] == partner_id);
+  });
+}
+
+inline bool bond_exists_on(BondList const &bonds, int bond_id) {
+  return std::any_of(bonds.begin(), bonds.end(), [=](BondView const &bond) {
+    return (bond.bond_id() == bond_id);
   });
 }
 
