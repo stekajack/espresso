@@ -56,7 +56,7 @@ class CollisionDetection : public AutoParameters<CollisionDetection> {
       {CollisionModeType::OFF, {"mode"}},
       {CollisionModeType::BIND_CENTERS, {"mode", "bond_centers", "distance"}},
       {CollisionModeType::STEKA_WAY,
-       {"mode", "bond_centers", "distance", "type"}},
+       {"mode", "bond_centers", "distance", "type_to_bond", "type_to_inert"}},
       {CollisionModeType::BIND_VS,
        {"mode", "bond_centers", "bond_vs", "part_type_vs", "distance",
         "vs_placement"}},
@@ -91,7 +91,8 @@ public:
           collision_params.three_particle_angle_resolution},
 
          {"distance", collision_params.distance},
-         {"type", collision_params.type},
+         {"type_to_bond", collision_params.type_to_bond},
+         {"type_to_inert", collision_params.type_to_inert},
          {"distance_glued_particle_to_vs",
           collision_params.dist_glued_part_to_vs},
          {"vs_placement", collision_params.vs_placement},

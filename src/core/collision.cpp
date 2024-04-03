@@ -511,6 +511,8 @@ void handle_collisions() {
       const int bondG[] = {c.pp2};
 
       get_part(c.pp1).bonds().insert({collision_params.bond_centers, bondG});
+      get_part(c.pp1).type() = collision_params.type_to_inert;
+      get_part(c.pp2).type() = collision_params.type_to_inert;
     }
   }
 

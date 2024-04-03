@@ -55,7 +55,9 @@ public:
   /// distance at which particles are bound
   double distance;
   // type of particles to be considered
-  int type;
+  int type_to_bond;
+  // type of when particles are made inert
+  int type_to_inert;
   // Square of distance at which particle are bound
   double distance2;
 
@@ -126,8 +128,8 @@ inline void detect_collision(Particle const &p1, Particle const &p2,
     return;
 
   if (collision_params.mode == CollisionModeType::STEKA_WAY) {
-    if (p1.type() != collision_params.type ||
-        p2.type() != collision_params.type)
+    if (p1.type() != collision_params.type_to_bond ||
+        p2.type() != collision_params.type_to_bond)
       return;
   }
   // If we are in the glue to surface mode, check that the particles
@@ -136,19 +138,12 @@ inline void detect_collision(Particle const &p1, Particle const &p2,
     if (!glue_to_surface_criterion(p1, p2))
       return;
   // Ignore virtual particles
-  if (collision_params.mode != CollisionModeType::STEKA_WAY)
+  // Check if there's already a bond between the particles
+  if (collision_params.mode != CollisionModeType::STEKA_WAY) {
     if (p1.is_virtual() or p2.is_virtual())
       return;
-
-  // Check if there's already a bond between the particles
-  if (collision_params.mode == CollisionModeType::STEKA_WAY &&
-      (bond_exists_on(p1.bonds(), collision_params.bond_centers) ||
-       bond_exists_on(p2.bonds(), collision_params.bond_centers))) {
-    return;
-  } else {
     if (pair_bond_exists_on(p1.bonds(), p2.id(), collision_params.bond_centers))
       return;
-
     if (pair_bond_exists_on(p2.bonds(), p1.id(), collision_params.bond_centers))
       return;
   }
