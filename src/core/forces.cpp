@@ -128,6 +128,9 @@ static void init_forces(const ParticleRange &particles,
   */
   for (auto &p : particles) {
     p.f = init_real_particle_force(p, time_step, kT);
+#ifdef DIPSUS
+    p.dip_fld() = {0, 0, 0};
+#endif // DIPSUS
   }
 
   /* initialize ghost forces with zero
@@ -135,6 +138,9 @@ static void init_forces(const ParticleRange &particles,
   */
   for (auto &p : ghost_particles) {
     p.f = init_ghost_force(p);
+#ifdef DIPSUS
+    p.dip_fld() = {0, 0, 0};
+#endif // DIPSUS
   }
 }
 

@@ -122,98 +122,108 @@ serialize_and_reduce(Archive &ar, Particle &p, unsigned int data_parts,
                      ReductionPolicy policy, SerializationDirection direction,
                      Utils::Vector3d const *ghost_shift) {
   if (data_parts & GHOSTTRANS_PROPRTS) {
-    ar &p.id() & p.mol_id() & p.type();
+    ar & p.id() & p.mol_id() & p.type();
 #ifdef VIRTUAL_SITES
-    ar &p.virtual_flag();
+    ar & p.virtual_flag();
 #endif
 #ifdef ROTATION
-    ar &p.rotation();
+    ar & p.rotation();
 #ifdef ROTATIONAL_INERTIA
-    ar &p.rinertia();
+    ar & p.rinertia();
 #endif
 #endif
 #ifdef MASS
-    ar &p.mass();
+    ar & p.mass();
 #endif
 #ifdef ELECTROSTATICS
-    ar &p.q();
+    ar & p.q();
 #endif
 #ifdef DIPOLES
-    ar &p.dipm();
+    ar & p.dipm();
 #endif
 #ifdef LB_ELECTROHYDRODYNAMICS
-    ar &p.mu_E();
+    ar & p.mu_E();
 #endif
 #ifdef VIRTUAL_SITES_RELATIVE
-    ar &p.vs_relative();
+    ar & p.vs_relative();
 #endif
 #ifdef THERMOSTAT_PER_PARTICLE
-    ar &p.gamma();
+    ar & p.gamma();
 #ifdef ROTATION
-    ar &p.gamma_rot();
+    ar & p.gamma_rot();
 #endif
 #endif
 #ifdef EXTERNAL_FORCES
-    ar &p.fixed();
-    ar &p.ext_force();
+    ar & p.fixed();
+    ar & p.ext_force();
 #ifdef ROTATION
-    ar &p.ext_torque();
+    ar & p.ext_torque();
 #endif
 #endif
 #ifdef ENGINE
-    ar &p.swimming();
+    ar & p.swimming();
 #endif
   }
   if (data_parts & GHOSTTRANS_POSITION) {
     if (direction == SerializationDirection::SAVE and ghost_shift != nullptr) {
       /* ok, this is not nice, but perhaps fast */
       auto pos = p.pos() + *ghost_shift;
-      ar &pos;
+      ar & pos;
     } else {
-      ar &p.pos();
+      ar & p.pos();
     }
 #ifdef ROTATION
-    ar &p.quat();
+    ar & p.quat();
 #endif
 #ifdef BOND_CONSTRAINT
-    ar &p.pos_last_time_step();
+    ar & p.pos_last_time_step();
 #endif
   }
   if (data_parts & GHOSTTRANS_MOMENTUM) {
-    ar &p.v();
+    ar & p.v();
 #ifdef ROTATION
-    ar &p.omega();
+    ar & p.omega();
 #endif
   }
   if (data_parts & GHOSTTRANS_FORCE) {
     if (policy == ReductionPolicy::UPDATE and
         direction == SerializationDirection::LOAD) {
       Utils::Vector3d force;
-      ar &force;
+      ar & force;
       p.force() += force;
     } else {
-      ar &p.force();
+      ar & p.force();
     }
 #ifdef ROTATION
     if (policy == ReductionPolicy::UPDATE and
         direction == SerializationDirection::LOAD) {
       Utils::Vector3d torque;
-      ar &torque;
+      ar & torque;
       p.torque() += torque;
     } else {
-      ar &p.torque();
+      ar & p.torque();
     }
 #endif
+#ifdef DIPSUS
+    if (policy == ReductionPolicy::UPDATE and
+        direction == SerializationDirection::LOAD) {
+      Utils::Vector3d dip_fld;
+      ar & dip_fld;
+      p.dip_fld() += dip_fld;
+    } else {
+      ar & p.dip_fld();
+    }
+#endif // DIPSUS
   }
 #ifdef BOND_CONSTRAINT
   if (data_parts & GHOSTTRANS_RATTLE) {
     if (policy == ReductionPolicy::UPDATE and
         direction == SerializationDirection::LOAD) {
       Utils::Vector3d correction;
-      ar &correction;
+      ar & correction;
       p.rattle_correction() += correction;
     } else {
-      ar &p.rattle_correction();
+      ar & p.rattle_correction();
     }
   }
 #endif

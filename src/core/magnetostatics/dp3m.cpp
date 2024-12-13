@@ -216,6 +216,9 @@ template <std::size_t cao> struct AssignTorques {
                         });
 
         p.torque() -= vector_product(p.calc_dip(), prefac * E);
+#ifdef DIPSUS
+        p.dip_fld() -= prefac * E;
+#endif
         ++p_index;
       }
     }
@@ -489,7 +492,7 @@ double DipolarP3M::kernel(bool force_flag, bool energy_flag,
             particles);
       }
     } /* if (dp3m.sum_mu2 > 0) */
-  }   /* if (force_flag) */
+  } /* if (force_flag) */
 
   if (dp3m.params.epsilon != P3M_EPSILON_METALLIC) {
     auto const surface_term =
@@ -556,6 +559,15 @@ double DipolarP3M::calc_surface_term(bool force_flag, bool energy_flag,
 
     ip = 0;
     for (auto &p : particles) {
+#ifdef DIPSUS
+      auto const dip_fld = Utils::Vector3d{pref * box_dip[0], pref * box_dip[1],
+                                           pref * box_dip[2]};
+      auto &fld = p.dip_fld(); // Reference to dipole field on the particle
+      fld[0] -= dip_fld[0];
+      fld[1] -= dip_fld[1];
+      fld[2] -= dip_fld[2];
+#endif // DIPSUS
+
       auto &torque = p.torque();
       torque[0] -= pref * sumix[ip];
       torque[1] -= pref * sumiy[ip];
