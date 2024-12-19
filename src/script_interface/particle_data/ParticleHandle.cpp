@@ -265,6 +265,40 @@ ParticleHandle::ParticleHandle() {
        },
        [this]() { return particle().dt_incr(); }},
 #endif
+#ifdef EGG_MODEL
+      {"egg_model_params",
+       [this](Variant const &value) {
+         // Initialize the EggModelParameters structure
+         ParticleProperties::EggModelParameters egg_model_params{};
+         try {
+           // Parse the input array
+           auto const array = get_value<std::vector<Variant>>(value);
+           if (array.size() != 3) {
+             throw 0;
+           }
+           // Assign the parsed values to the EggModelParameters structure
+           egg_model_params.use_egg_model = get_value<bool>(array[0]);
+           egg_model_params.egg_gamma = get_value<double>(array[1]);
+           egg_model_params.aniso_energy = get_value<double>(array[2]);
+         } catch (...) {
+           throw std::invalid_argument(error_msg(
+               "egg_model_params",
+               "must take the form [use_egg_model, egg_gamma, aniso_energy]"));
+         }
+
+         // Call the setter function to update the particle properties
+         set_particle_egg_model_params(m_pid, egg_model_params.use_egg_model,
+                                       egg_model_params.egg_gamma,
+                                       egg_model_params.aniso_energy);
+       },
+       [this]() {
+         // Retrieve the particle's current EggModelParameters
+         auto const &p = particle();
+         auto const &params = p.egg_model_params();
+         return std::vector<Variant>{
+             {params.use_egg_model, params.egg_gamma, params.aniso_energy}};
+       }},
+#endif
 #ifdef ROTATIONAL_INERTIA
       {"rinertia",
        [this](Variant const &value) {

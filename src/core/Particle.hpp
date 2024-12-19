@@ -219,21 +219,25 @@ struct ParticleProperties {
     double egg_gamma = 1;
     double aniso_energy = 0;
 
-    Utils::Vector3d internal_magnetic_torque = {0.,0.,0.};
+    Utils::Vector3d internal_magnetic_torque = {0., 0., 0.};
 
-    /** Orientation of the virtual particle easy axis in the body fixed frame. */
-    Utils::Quaternion<double> axis_quat_body_fixed = Utils::Quaternion<double>::identity();
+    /** Orientation of the virtual particle easy axis in the body fixed frame.
+     */
+    Utils::Quaternion<double> axis_quat_body_fixed =
+        Utils::Quaternion<double>::identity();
 
-    /** Orientation of the virtual particle easy axis in the space fixed frame. */
-    Utils::Quaternion<double> axis_quat_space_fixed = Utils::Quaternion<double>::identity();
-    
+    /** Orientation of the virtual particle easy axis in the space fixed frame.
+     */
+    Utils::Quaternion<double> axis_quat_space_fixed =
+        Utils::Quaternion<double>::identity();
+
     template <class Archive> void serialize(Archive &ar, long int) {
-      ar &use_egg_model;
-      ar &egg_gamma;
-      ar &aniso_energy;
-      ar &axis_quat_body_fixed;  
-      ar &axis_quat_space_fixed;  
-      ar &internal_magnetic_torque;   
+      ar & use_egg_model;
+      ar & egg_gamma;
+      ar & aniso_energy;
+      ar & axis_quat_body_fixed;
+      ar & axis_quat_space_fixed;
+      ar & internal_magnetic_torque;
     }
   } egg_model_params;
 
@@ -313,7 +317,7 @@ struct ParticleProperties {
 #endif
 
 #ifdef EGG_MODEL
-    ar &egg_model_params;
+    ar & egg_model_params;
 #endif
 #endif // VIRTUAL_SITES
 
@@ -630,11 +634,18 @@ public:
 #endif // VIRTUAL_SITES_RELATIVE
 #ifdef EGG_MODEL
   auto use_egg_model() const { return p.egg_model_params.use_egg_model; }
-  auto calc_axis() const { return Utils::convert_quaternion_to_director(p.egg_model_params.axis_quat_space_fixed); }
+  auto calc_axis() const {
+    return Utils::convert_quaternion_to_director(
+        p.egg_model_params.axis_quat_space_fixed);
+  }
   auto const &egg_model_params() const { return p.egg_model_params; }
   auto &egg_model_params() { return p.egg_model_params; }
-  auto const &internal_magnetic_torque() const { return p.egg_model_params.internal_magnetic_torque; }
-  auto &internal_magnetic_torque() { return p.egg_model_params.internal_magnetic_torque; }
+  auto const &internal_magnetic_torque() const {
+    return p.egg_model_params.internal_magnetic_torque;
+  }
+  auto &internal_magnetic_torque() {
+    return p.egg_model_params.internal_magnetic_torque;
+  }
   auto const &aniso_energy() const { return p.egg_model_params.aniso_energy; }
   auto &aniso_energy() { return p.egg_model_params.aniso_energy; }
   auto const &egg_gamma() const { return p.egg_model_params.egg_gamma; }
