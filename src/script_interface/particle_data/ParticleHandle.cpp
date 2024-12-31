@@ -213,12 +213,14 @@ ParticleHandle::ParticleHandle() {
        },
        [this]() { return particle().dipm(); }},
 #endif // DIPOLES
-#ifdef DIPSUS
+#ifdef DIPOLE_FIELD_TRACKING
       {"dip_fld",
        [this](Variant const &value) {
          set_particle_dip_fld(m_pid, get_value<Utils::Vector3d>(value));
        },
        [this]() { return particle().dip_fld(); }},
+#endif // DIPOLE_FIELD_TRACKING
+#ifdef MAGNETODYNAMICS_TSW_MODEL
       {"sw_real",
        [this](Variant const &value) {
          set_particle_sw_real(m_pid, get_value<bool>(value));
@@ -264,8 +266,8 @@ ParticleHandle::ParticleHandle() {
          set_particle_dt_incr(m_pid, get_value<double>(value));
        },
        [this]() { return particle().dt_incr(); }},
-#endif
-#ifdef EGG_MODEL
+#endif // MAGNETODYNAMICS_TSW_MODEL
+#ifdef MAGNETODYNAMICS_EGG_MODEL
       {"egg_model_params",
        [this](Variant const &value) {
          // Initialize the EggModelParameters structure
@@ -298,7 +300,7 @@ ParticleHandle::ParticleHandle() {
          return std::vector<Variant>{
              {params.use_egg_model, params.egg_gamma, params.aniso_energy}};
        }},
-#endif
+#endif // MAGNETODYNAMICS_EGG_MODEL
 #ifdef ROTATIONAL_INERTIA
       {"rinertia",
        [this](Variant const &value) {

@@ -171,9 +171,10 @@ void set_particle_dip(int part, Utils::Vector3d const &dip);
 void set_particle_dipm(int part, double dipm);
 #endif
 
-#ifdef DIPSUS
-
+#ifdef DIPOLE_FIELD_TRACKING
 void set_particle_dip_fld(int part, const Utils::Vector3d &dip_fld);
+#endif // DIPOLE_FIELD_TRACKING
+#ifdef MAGNETODYNAMICS_TSW_MODEL
 void set_particle_sw_real(int part, bool sw_real);
 void set_particle_sw_virt(int part, bool sw_virt);
 void set_particle_phi0(int part, double phi0);
@@ -182,10 +183,8 @@ void set_particle_Hkinv(int part, double Hkinv);
 void set_particle_kT_KVm_inv(int part, double kT_KVm_inv);
 void set_particle_tau0_inv(int part, double tau0_inv);
 void set_particle_tau_trans_inv(int part, double tau_trans_inv);
-
 void set_particle_dt_incr(int part, double dt_incr);
-
-#endif
+#endif // MAGNETODYNAMICS_TSW_MODEL
 
 #ifdef VIRTUAL_SITES
 /** Call only on the head node: set particle virtual flag.
@@ -201,13 +200,13 @@ void set_particle_vs_relative(int part, int vs_relative_to, double vs_distance,
                               Utils::Quaternion<double> const &rel_ori);
 #endif
 
-#ifdef EGG_MODEL
+#ifdef MAGNETODYNAMICS_EGG_MODEL
 void set_particle_egg_model_params(int part, bool use_egg_model,
                                    double egg_gamma, double aniso_energy);
 void set_particle_axis_quat_body(int part,
                                  Utils::Quaternion<double> const &axis_quat);
 
-#endif // EGG_MODEL
+#endif // MAGNETODYNAMICS_EGG_MODEL
 
 #ifdef THERMOSTAT_PER_PARTICLE
 /** Call only on the head node: set particle frictional coefficient.
@@ -315,7 +314,7 @@ void auto_exclusions(int distance);
  */
 void rescale_particles(int dir, double scale);
 
-#ifdef EGG_MODEL
+#ifdef MAGNETODYNAMICS_EGG_MODEL
 
 // void get_particle_egg_model_params(const particle * p, bool & use_egg_model,
 // double & egg_gamma, double & aniso_energy) Quaternion[double]
@@ -340,6 +339,6 @@ inline Utils::Vector3d get_particle_axis(Particle const *p) {
   return p->calc_axis();
 }
 
-#endif // EGG_MODEL
+#endif // MAGNETODYNAMICS_EGG_MODEL
 
 #endif

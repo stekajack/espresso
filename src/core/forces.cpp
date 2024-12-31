@@ -32,6 +32,7 @@
 #include "collision.hpp"
 #include "communication.hpp"
 #include "constraints.hpp"
+#include "egg_model_inline.hpp"
 #include "electrostatics/icc.hpp"
 #include "electrostatics/p3m_gpu.hpp"
 #include "forcecap.hpp"
@@ -44,6 +45,7 @@
 #include "integrate.hpp"
 #include "interactions.hpp"
 #include "magnetostatics/dipoles.hpp"
+#include "magnetostatics/stoner_wolfarth_thermal.hpp"
 #include "nonbonded_interactions/VerletCriterion.hpp"
 #include "nonbonded_interactions/nonbonded_interaction_data.hpp"
 #include "npt.hpp"
@@ -53,14 +55,17 @@
 #include "thermostats/langevin_inline.hpp"
 #include "virtual_sites.hpp"
 
-#include "egg_model_inline.hpp"
-
 #include <boost/variant.hpp>
 
 #include <profiler/profiler.hpp>
 
 #include <cassert>
 #include <memory>
+
+#ifdef MAGNETODYNAMICS_TSW_MODEL
+static std::random_device rd;
+static std::mt19937 generator = Random::mt19937(static_cast<unsigned>(rd()));
+#endif // MAGNETODYNAMICS_TSW_MODEL
 
 std::shared_ptr<ComFixed> comfixed = std::make_shared<ComFixed>();
 
@@ -130,9 +135,9 @@ static void init_forces(const ParticleRange &particles,
   */
   for (auto &p : particles) {
     p.f = init_real_particle_force(p, time_step, kT);
-#ifdef DIPSUS
+#ifdef DIPOLE_FIELD_TRACKING
     p.dip_fld() = {0, 0, 0};
-#endif // DIPSUS
+#endif // DIPOLE_FIELD_TRACKING
   }
 
   /* initialize ghost forces with zero
@@ -140,9 +145,9 @@ static void init_forces(const ParticleRange &particles,
   */
   for (auto &p : ghost_particles) {
     p.f = init_ghost_force(p);
-#ifdef DIPSUS
+#ifdef DIPOLE_FIELD_TRACKING
     p.dip_fld() = {0, 0, 0};
-#endif // DIPSUS
+#endif // DIPOLE_FIELD_TRACKING
   }
 }
 
@@ -154,6 +159,9 @@ void init_forces_ghosts(const ParticleRange &particles) {
 
 void force_calc(CellStructure &cell_structure, double time_step, double kT) {
   ESPRESSO_PROFILER_CXX_MARK_FUNCTION;
+#ifdef MAGNETODYNAMICS_TSW_MODEL
+  stoner_wolfarth_main(cell_structure.local_particles(), generator);
+#endif // MAGNETODYNAMICS_TSW_MODEL
 
   auto &espresso_system = EspressoSystemInterface::Instance();
   espresso_system.update();
@@ -245,13 +253,13 @@ void force_calc(CellStructure &cell_structure, double time_step, double kT) {
   virtual_sites()->back_transfer_forces_and_torques();
 #endif
 
-#ifdef EGG_MODEL
-    for (auto &p : particles) {
-      if (p.is_virtual() and p.use_egg_model()) {
-        egg_model_calc_internal_magnetic_torque(p);
-      }
+#ifdef MAGNETODYNAMICS_EGG_MODEL
+  for (auto &p : particles) {
+    if (p.is_virtual() and p.use_egg_model()) {
+      egg_model_calc_internal_magnetic_torque(p);
     }
-#endif // EGG_MODEL
+  }
+#endif // MAGNETODYNAMICS_EGG_MODEL
 
   // Communication Step: ghost forces
   cell_structure.ghosts_reduce_forces();

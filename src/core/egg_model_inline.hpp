@@ -1,7 +1,7 @@
 #ifndef EGG_MODEL_INLINE_HPP
 #define EGG_MODEL_INLINE_HPP
 
-#ifdef EGG_MODEL
+#ifdef MAGNETODYNAMICS_EGG_MODEL
 
 #include "Particle.hpp"
 #include "random.hpp"
@@ -69,5 +69,5 @@ inline void egg_model_bd_internal_rotation(BrownianThermostat const &brownian,
   }
 }
 
-#endif // EGG_MODEL
+#endif // MAGNETODYNAMICS_EGG_MODEL
 #endif // EGG_MODEL_INLINE_HPP

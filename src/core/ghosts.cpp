@@ -204,7 +204,7 @@ serialize_and_reduce(Archive &ar, Particle &p, unsigned int data_parts,
       ar & p.torque();
     }
 #endif
-#ifdef DIPSUS
+#ifdef DIPOLE_FIELD_TRACKING
     if (policy == ReductionPolicy::UPDATE and
         direction == SerializationDirection::LOAD) {
       Utils::Vector3d dip_fld;
@@ -213,7 +213,7 @@ serialize_and_reduce(Archive &ar, Particle &p, unsigned int data_parts,
     } else {
       ar & p.dip_fld();
     }
-#endif // DIPSUS
+#endif // DIPOLE_FIELD_TRACKING
   }
 #ifdef BOND_CONSTRAINT
   if (data_parts & GHOSTTRANS_RATTLE) {

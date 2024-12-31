@@ -25,11 +25,9 @@
 #include "core/dpd.hpp"
 #include "core/energy.hpp"
 #include "core/grid.hpp"
-#include "core/magnetostatics/stoner_wolfarth_thermal.hpp"
 #include "core/nonbonded_interactions/nonbonded_interaction_data.hpp"
 #include "core/partCfg_global.hpp"
 #include "core/particle_node.hpp"
-#include "random.hpp"
 #include "script_interface/communication.hpp"
 
 #include <utils/Vector.hpp>
@@ -41,9 +39,6 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-
-std::random_device rd;
-static std::mt19937 generator = Random::mt19937(static_cast<unsigned>(rd()));
 
 namespace ScriptInterface {
 namespace Analysis {
@@ -92,10 +87,6 @@ Variant Analysis::do_call_method(std::string const &name,
     MPI_Comm_size(comm_cart, &world);
     fprintf(stderr, "Starting processes %d out of %d\n", rank, world);
     return {}; /* or return my_calculation(comm_cart); */
-  }
-  if (name == "sw_hot") {
-    stoner_wolfarth_main(::cell_structure.local_particles(), generator);
-    return {};
   }
 
   if (name == "linear_momentum") {
